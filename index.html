@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Soulstone Simulator v1c</title>
+
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    background: #1e2530;
+    color: #e6e9ef;
+    padding: 20px;
+  }
+
+  .container { max-width: 1050px; margin: auto; }
+
+  .row { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+  .box { background: #2b3545; padding: 15px; border-radius: 10px; flex: 1; min-width: 320px; }
+
+  button {
+    background: #4f8cff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-right: 8px;
+    margin-top: 8px;
+  }
+  button:hover { opacity: 0.92; }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .bad { background: #c44; }
+  .ok  { background: #36b37e; }
+
+  select, input[type="checkbox"] {
+    margin-top: 6px;
+  }
+
+  select {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: #121821;
+    color: #e6e9ef;
+    outline: none;
+  }
+
+  label {
+    display: block;
+    margin-top: 10px;
+    font-size: 13px;
+    opacity: 0.95;
+  }
+
+  .track {
+    margin-bottom: 14px;
+    padding: 10px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.15);
+  }
+
+  .track-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .meta {
+    opacity: 0.9;
+    font-size: 13px;
+  }
+
+  .gems {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .gem {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: #8892a0; /* unused/gray */
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
+  }
+
+  .gem.success { background: #3ad46f; } /* green */
+  .gem.fail { background: #e45555; }    /* red */
+
+  .log {
+    background: #121821;
+    padding: 10px;
+    height: 270px;
+    overflow-y: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  .successTxt { color: #9dff9d; }
+  .failTxt { color: #ff9d9d; }
+
+  .hint {
+    font-size: 13px;
+    opacity: 0.9;
+    margin-top: 8px;
+    line-height: 1.35;
+  }
+
+  .inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .pill {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    font-size: 12px;
+    opacity: 0.95;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Soulstone Enchanting Helper (v1c)</h1>
+
+  <div class="row">
+    <div class="box">
+      <h2>Configure Soulstone</h2>
+
+      <label>Affix Slot 1</label>
+      <select id="affix1"></select>
+      <div class="inline">
+        <input type="checkbox" id="low1">
+        <span class="pill">less desirable</span>
+      </div>
+
+      <label>Affix Slot 2</label>
+      <select id="affix2"></select>
+      <div class="inline">
+        <input type="checkbox" id="low2">
+        <span class="pill">less desirable</span>
+      </div>
+
+      <label>Affix Slot 3</label>
+      <select id="affix3"></select>
+      <div class="inline">
+        <input type="checkbox" id="low3">
+        <span class="pill">less desirable</span>
+      </div>
+
+      <label>Curse</label>
+      <select id="curseSelect"></select>
+
+      <button onclick="applyConfigAndReset()">Apply / Reset With These</button>
+
+      <div class="hint" id="configNote">
+        Picks are unique by default (dropdowns will avoid duplicates).
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>Status</h2>
+      <div>Success Chance: <strong id="chance">75%</strong></div>
+      <div>Total Slots Used: <strong id="slotsUsed">0 / 40</strong></div>
+      <div>Total Points Gained: <strong id="pointsGained">0</strong></div>
+      <div class="hint">
+        Green gem = success (+1 point). Red gem = fail (slot consumed, +0 points).<br>
+        Completion is when all 40 slots are consumed.
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>Advisor Mode (your in-game clicks)</h2>
+
+      <button onclick="getRecommendationOnly()">Get Recommendation</button>
+      <button class="ok" onclick="recordOutcome(true)" id="btnSuccess" disabled>Record Success</button>
+      <button class="bad" onclick="recordOutcome(false)" id="btnFail" disabled>Record Fail</button>
+
+      <div class="hint" id="advisorText">Grab a recommendation, do it in-game, then record success/fail here.</div>
+
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.12); margin:14px 0;">
+
+      <h2>Optional</h2>
+      <button onclick="doFullSim()">Run Full Simulation (internal RNG)</button>
+      <button class="bad" onclick="resetStone()">Reset</button>
+
+      <div class="hint">
+        “Full Simulation” uses browser RNG. Advisor mode does not.
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="box">
+      <h2>Affixes (manual buttons still available)</h2>
+      <div id="affixes"></div>
+    </div>
+
+    <div class="box">
+      <h2>Curse</h2>
+      <div id="curse"></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>Log</h2>
+    <div id="log" class="log"></div>
+  </div>
+</div>
+
+<script>
+/* ---------------- DATA LISTS ---------------- */
+
+const AFFIX_LIST = [
+  "vengeance","juggernaut","ability master","hexed","adrenaline","precision",
+  "blunt force","bloodlust","preemptive strike","tenacity","fortitude","merciless",
+  "heavy armor","emergency rescue","bountiful","haste"
+];
+
+const CURSE_LIST = ["power","speed","defence","crit"];
+
+/* ---------------- CORE MODEL ---------------- */
+
+function createTrack(name, priority) {
+  return { name, priority, attempts: [] }; // attempts holds true/false, max 10
+}
+
+function createSoulstoneStateFromConfig(config) {
+  return {
+    maxChance: 75,
+    minChance: 25,
+    chanceStep: 10,
+    chance: 75,
+
+    affixes: [
+      createTrack(config.affix1, config.low1 ? "low" : "high"),
+      createTrack(config.affix2, config.low2 ? "low" : "high"),
+      createTrack(config.affix3, config.low3 ? "low" : "high")
+    ],
+
+    curse: createTrack(config.curse + " curse", "curse"),
+    log: []
+  };
+}
+
+let state = null;
+
+// stores the last recommended move (for advisor mode)
+let pendingRecommendation = null;
+
+function clampChance(x) {
+  return Math.max(state.minChance, Math.min(state.maxChance, x));
+}
+
+function rollSuccess(chancePercent) {
+  return Math.random() * 100 < chancePercent;
+}
+
+function trackPoints(track) {
+  return track.attempts.reduce((acc, v) => acc + (v === true ? 1 : 0), 0);
+}
+
+function trackSlotsUsed(track) {
+  return track.attempts.length;
+}
+
+function totalSlotsUsed() {
+  const a = state.affixes.reduce((acc, t) => acc + trackSlotsUsed(t), 0);
+  return a + trackSlotsUsed(state.curse);
+}
+
+function totalPointsGained() {
+  const a = state.affixes.reduce((acc, t) => acc + trackPoints(t), 0);
+  return a + trackPoints(state.curse);
+}
+
+function isFinished() {
+  return totalSlotsUsed() >= 40;
+}
+
+// Apply one attempt. If forcedOutcome is true/false, we do not RNG.
+function applyAttempt(type, index = null, forcedOutcome = null) {
+  if (isFinished()) return;
+
+  let track;
+  if (type === "affix") track = state.affixes[index];
+  else track = state.curse;
+
+  if (!track) return;
+  if (track.attempts.length >= 10) return;
+
+  const before = state.chance;
+  const success = (forcedOutcome === null) ? rollSuccess(state.chance) : forcedOutcome;
+
+  // consume slot always
+  track.attempts.push(success);
+
+  // update chance
+  if (success) {
+    if (state.chance > state.minChance) {
+      state.chance = clampChance(state.chance - state.chanceStep);
+    } else {
+      state.chance = state.minChance;
+    }
+  } else {
+    state.chance = clampChance(state.chance + state.chanceStep);
+  }
+
+  state.log.push({
+    track: track.name,
+    type,
+    success,
+    chanceBefore: before,
+    chanceAfter: state.chance,
+    slot: track.attempts.length,
+    pointsNow: trackPoints(track),
+    totalSlots: totalSlotsUsed(),
+    totalPoints: totalPointsGained()
+  });
+
+  render();
+}
+
+/* ---------------- RECOMMENDER (still v1, tunable later) ---------------- */
+
+function chooseBestUpgrade() {
+  const c = state.chance;
+
+  const cursePts = trackPoints(state.curse);
+  const curseSlotsUsed = trackSlotsUsed(state.curse);
+  const curseSlotsLeft = 10 - curseSlotsUsed;
+
+  const curseDead = (cursePts >= 5); // 5+ is same effect, so extra points don't matter
+
+  // helper: count points/slots for affix
+  function info(a) {
+    const pts = trackPoints(a);
+    const used = trackSlotsUsed(a);
+    const left = 10 - used;
+    const need = Math.max(0, 6 - pts);
+    return { pts, used, left, need };
+  }
+
+  function protectLastSlotForPremium(a) {
+    const { need, left } = info(a);
+    // exactly 5 points with 1 slot left to reach 6
+    return (need === 1 && left === 1);
+  }
+
+  // emergency if affix is at real risk of failing to reach 6 with remaining slots
+  // (simple heuristic, tuned to your examples)
+  // "Must act now" = no slack left (or impossible already)
+
+
+
+
+  // choose which affix is "best" among a set: prefer more behind <6, then fewer slots left
+  function betterAffixIndex(idxA, idxB) {
+    const A = state.affixes[idxA];
+    const B = state.affixes[idxB];
+    const a = info(A);
+    const b = info(B);
+
+    // prefer the one still under 6
+    if ((a.pts < 6) !== (b.pts < 6)) return (a.pts < 6) ? idxA : idxB;
+
+    // if both under 6: prefer fewer points (more behind)
+    if (a.pts !== b.pts) return (a.pts < b.pts) ? idxA : idxB;
+
+    // if tie: prefer less runway (more urgent)
+    if (a.left !== b.left) return (a.left < b.left) ? idxA : idxB;
+
+    // final tie: prefer non-low priority (more desirable)
+    if (A.priority !== B.priority) return (A.priority === "high") ? idxA : idxB;
+
+    return idxA;
+  }
+
+  // available affix indices (not full)
+  const affixAvail = state.affixes
+    .map((a, i) => ({ a, i, inf: info(a) }))
+    .filter(x => x.inf.left > 0);
+
+  // if nothing available, only curse remains
+  if (affixAvail.length === 0) {
+    if (curseSlotsLeft > 0 && c < 65) return { type: "curse", why: "Only curse slots remain" };
+    return { type: "none", why: "No moves left" };
+  }
+
+  // split affixes by priority
+  const highIdxs = affixAvail.filter(x => x.a.priority === "high").map(x => x.i);
+  const lowIdxs  = affixAvail.filter(x => x.a.priority === "low").map(x => x.i);
+
+  // pick "best" high and any affix by catch-up/urgency
+  function pickBestFrom(list) {
+    if (list.length === 0) return -1;
+    return list.reduce((best, cur) => best === -1 ? cur : betterAffixIndex(best, cur), -1);
+  }
+
+  const bestHigh = pickBestFrom(highIdxs);
+  const bestAny  = pickBestFrom(affixAvail.map(x => x.i));
+  const bestLow  = pickBestFrom(lowIdxs);
+
+  // --- HARD RULE: never put 65%+ into curse ---
+  if (c >= 65) {
+    // prefer high-priority affix that is most behind under 6
+    if (bestHigh !== -1) {
+      return { type: "affix", index: bestHigh, why: "65%+ is premium → never curse, feed best desirable" };
+    }
+    return { type: "affix", index: bestAny, why: "65%+ is premium → never curse, use best remaining affix" };
+  }
+
+  // --- LOW ODDS: default burn on curse, unless affix emergency ---
+  if (c <= 35) {
+    // if any high-priority affix is in emergency, salvage it instead
+
+
+    // otherwise burn curse if it has slots left
+    if (curseSlotsLeft > 0) {
+      if (!curseDead) return { type: "curse", why: "25–35% → burn curse slots (aim for fails, keep curse <5)" };
+      return { type: "curse", why: "25–35% → curse already 5+, burn freely" };
+    }
+
+    // if curse full, burn on least valuable affix (low priority or already >=6)
+    if (bestLow !== -1) return { type: "affix", index: bestLow, why: "Curse slots gone → burn low odds on low-priority affix" };
+    return { type: "affix", index: bestAny, why: "Curse slots gone → burn low odds on least urgent affix available" };
+  }
+
+  // --- MID ODDS (45–55-ish): feed low-priority if chosen, otherwise catch up desirables ---
+  // --- MID ODDS (45–55-ish): bias toward low-priority early, otherwise catch up desirables ---
+  if (c >= 45 && c <= 55) {
+    const early = totalSlotsUsed() < 12; // tweak this number if you want (start-bias window)
+
+    const highUnder6 = highIdxs
+      .filter(i => info(state.affixes[i]).pts < 6)
+      .filter(i => !protectLastSlotForPremium(state.affixes[i]));
+
+
+
+
+    // EARLY BIAS:
+    // If it's early and we have a low-priority affix, spend more 45–55 on it,
+    // as long as we’re not ignoring a badly-behind desirable.
+    if (early && bestLow !== -1) {
+      // “badly behind” guard: if any desirable is REALLY lagging (0–1 points),
+      // prioritize catching it up instead of feeding low-priority.
+      const veryBehind = highIdxs.some(i => info(state.affixes[i]).pts <= 1);
+      if (!veryBehind) {
+        return { type: "affix", index: bestLow, why: "45–55% → early bias, feed less desirable" };
+      }
+    }
+
+    // Normal behavior: push desirables under 6 using utility odds
+    // Normal behavior: ONLY use utility odds on desirables under 6 if runway is good so far.
+    // Example "good runway": around 60%+ success rate so far (tuneable).
+    function goodRunway(i) {
+      const inf = info(state.affixes[i]);
+      const used = inf.used;
+      const pts = inf.pts;
+
+      // early taps: still judge a bit, but don't overreact
+      if (used === 0) return true;
+      if (used === 1) return pts >= 0; // always true
+      if (used === 2) return pts >= 1; // 0/2 should be "bad" now
+
+      // stricter runway gate:
+      // requires being clearly ahead of schedule to justify spending 45–55 here
+      return pts > Math.floor(used * 0.7);
+    }
+
+
+    const highUnder6GoodRunway = highUnder6.filter(i => goodRunway(i));
+
+    if (highUnder6GoodRunway.length > 0) {
+      const pick = pickBestFrom(highUnder6GoodRunway);
+      return { type: "affix", index: pick, why: "45–55% → desirables under 6 but runway looks good → utility is fine" };
+    }
+
+    // If desirables are under 6 but runway looks bad, don't waste utility odds trying to fix.
+    // Save pressure for premium odds; use low-priority here if possible.
+    if (highUnder6.length > 0 && bestLow !== -1) {
+      return { type: "affix", index: bestLow, why: "45–55% → desirables under 6 but runway is bad → feed less desirable instead" };
+    }
+
+
+    // If desirables are safe, feed low-priority
+    if (bestLow !== -1) {
+      return { type: "affix", index: bestLow, why: "45–55% → feed less desirable (good band for it)" };
+    }
+
+    return { type: "affix", index: bestAny, why: "45–55% → best remaining affix" };
+  }
+
+  // --- MID-HIGH ODDS (55–65): treat like premium-lite ---
+  if (c > 55 && c < 65) {
+    const highUnder6 = highIdxs.filter(i => info(state.affixes[i]).pts < 6);
+    if (highUnder6.length > 0) {
+      const pick = pickBestFrom(highUnder6);
+      return { type: "affix", index: pick, why: "55–65% → premium-lite, push desirables under 6" };
+    }
+    // if all desirables safe, now you can feed low-priority or cooled
+    if (bestLow !== -1) return { type: "affix", index: bestLow, why: "55–65% → desirables safe, feed low-priority/cooled" };
+    return { type: "affix", index: bestAny, why: "55–65% → desirables safe, use best remaining affix" };
+  }
+
+  // --- OTHER MID (35–65, excluding >=65 already handled): mixed play ---
+  // If curse is still protected (<5), avoid touching it unless we're intentionally burning (mostly at low odds).
+  // If curse is dead (>=5), it can take bad-ish odds, but never 65+ (already gated).
+  if (curseSlotsLeft > 0 && curseDead && c < 45) {
+    return { type: "curse", why: "Curse is 5+ and odds are not premium → safe trash can" };
+  }
+
+  // default: push desirables under 6, else use low-priority, else any
+  const highUnder6 = highIdxs.filter(i => info(state.affixes[i]).pts < 6);
+  if (highUnder6.length > 0) {
+    const pick = pickBestFrom(highUnder6);
+    return { type: "affix", index: pick, why: "Default → push desirables under 6" };
+  }
+
+  if (bestLow !== -1) return { type: "affix", index: bestLow, why: "Default → feed low-priority / cooled affix" };
+  return { type: "affix", index: bestAny, why: "Default → use best remaining affix" };
+}
+
+function setAdvisorText(t) {
+  document.getElementById("advisorText").textContent = t;
+}
+
+function setAdvisorButtons(enabled) {
+  document.getElementById("btnSuccess").disabled = !enabled;
+  document.getElementById("btnFail").disabled = !enabled;
+}
+
+/* ---------------- SIMULATION (optional) ---------------- */
+
+function doFullSim() {
+  while (!isFinished()) {
+    const choice = chooseBestUpgrade();
+    if (choice.type === "none") break;
+    applyAttempt(choice.type, choice.index, null); // internal RNG
+  }
+}
+
+/* ---------------- UI: CONFIG ---------------- */
+
+function populateSelect(selectEl, list) {
+  selectEl.innerHTML = "";
+  list.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = v;
+    selectEl.appendChild(opt);
+  });
+}
+
+function refreshAffixOptionsUnique() {
+  // simple uniqueness enforcement: disable already-selected values in other dropdowns
+  const s1 = document.getElementById("affix1");
+  const s2 = document.getElementById("affix2");
+  const s3 = document.getElementById("affix3");
+
+  const chosen = new Set([s1.value, s2.value, s3.value]);
+
+  [s1, s2, s3].forEach(sel => {
+    Array.from(sel.options).forEach(opt => {
+      // disable if it's chosen elsewhere (not current select's own value)
+      opt.disabled = (chosen.has(opt.value) && opt.value !== sel.value);
+    });
+  });
+}
+
+function applyConfigAndReset() {
+  const config = {
+    affix1: document.getElementById("affix1").value,
+    affix2: document.getElementById("affix2").value,
+    affix3: document.getElementById("affix3").value,
+    low1: document.getElementById("low1").checked,
+    low2: document.getElementById("low2").checked,
+    low3: document.getElementById("low3").checked,
+    curse: document.getElementById("curseSelect").value
+  };
+
+  state = createSoulstoneStateFromConfig(config);
+  pendingRecommendation = null;
+  setAdvisorButtons(false);
+  setAdvisorText("Grab a recommendation, do it in-game, then record success/fail here.");
+  render();
+}
+
+function getRecommendationOnly() {
+  if (!state) return;
+
+  if (isFinished()) {
+    pendingRecommendation = null;
+    setAdvisorButtons(false);
+    setAdvisorText("All 40 slots are used. Reset to start again.");
+    return;
+  }
+
+  const choice = chooseBestUpgrade();
+  pendingRecommendation = choice;
+
+  if (!choice || choice.type === "none") {
+    setAdvisorButtons(false);
+    setAdvisorText("No moves left.");
+    return;
+  }
+
+  setAdvisorButtons(true);
+
+  if (choice.type === "curse") {
+    setAdvisorText(`Recommendation: CURSE — ${choice.why}`);
+  } else {
+    const a = state.affixes[choice.index];
+    setAdvisorText(`Recommendation: ${a.name.toUpperCase()} (slot ${choice.index + 1}) — ${choice.why}`);
+  }
+}
+
+function recordOutcome(success) {
+  if (!state) return;
+  if (!pendingRecommendation || pendingRecommendation.type === "none") return;
+
+  const move = pendingRecommendation;
+
+  // consume 1 slot and update chance, using forcedOutcome
+  applyAttempt(move.type, move.index ?? null, success);
+
+  pendingRecommendation = null;
+  setAdvisorButtons(false);
+
+  if (!isFinished()) {
+    setAdvisorText("Logged. Grab another recommendation, do it in-game, then record success/fail here.");
+  } else {
+    setAdvisorText("Done — all 40 slots are used. Reset to start again.");
+  }
+}
+
+
+function resetStone() {
+  applyConfigAndReset();
+}
+
+/* ---------------- UI: RENDER ---------------- */
+
+function gemHTML(attempts) {
+  let html = "";
+  for (let i = 0; i < 10; i++) {
+    if (i < attempts.length) html += `<span class="gem ${attempts[i] ? "success" : "fail"}"></span>`;
+    else html += `<span class="gem"></span>`;
+  }
+  return html;
+}
+
+function render() {
+  document.getElementById("chance").textContent = state.chance + "%";
+  document.getElementById("slotsUsed").textContent = `${totalSlotsUsed()} / 40`;
+  document.getElementById("pointsGained").textContent = `${totalPointsGained()}`;
+
+  const affixesDiv = document.getElementById("affixes");
+  affixesDiv.innerHTML = "";
+
+  state.affixes.forEach((a, i) => {
+    const slots = trackSlotsUsed(a);
+    const pts = trackPoints(a);
+    const disabled = (slots >= 10 || isFinished()) ? "disabled" : "";
+
+    affixesDiv.innerHTML += `
+      <div class="track">
+        <div class="track-top">
+          <div>
+            <strong>${a.name}</strong>
+            <span class="meta"> — Points: ${pts} | Slots: ${slots}/10 | Priority: ${a.priority}</span>
+          </div>
+          <div>
+            <button ${disabled} onclick="applyAttempt('affix', ${i}, null)">Manual Enchant</button>
+          </div>
+        </div>
+        <div class="gems">${gemHTML(a.attempts)}</div>
+      </div>
+    `;
+  });
+
+  const curseDiv = document.getElementById("curse");
+  const cSlots = trackSlotsUsed(state.curse);
+  const cPts = trackPoints(state.curse);
+  const cDisabled = (cSlots >= 10 || isFinished()) ? "disabled" : "";
+
+  curseDiv.innerHTML = `
+    <div class="track">
+      <div class="track-top">
+        <div>
+          <strong>${state.curse.name}</strong>
+          <span class="meta"> — Points: ${cPts} | Slots: ${cSlots}/10</span>
+        </div>
+        <div>
+          <button class="bad" ${cDisabled} onclick="applyAttempt('curse', null, null)">Manual Enchant Curse</button>
+        </div>
+      </div>
+      <div class="gems">${gemHTML(state.curse.attempts)}</div>
+    </div>
+  `;
+
+  const logDiv = document.getElementById("log");
+  logDiv.innerHTML = state.log.map(l => {
+    const cls = l.success ? "successTxt" : "failTxt";
+    const tag = l.success ? "SUCCESS" : "FAIL";
+    return `<div class="${cls}">
+      [${l.chanceBefore}%→${l.chanceAfter}%] ${l.track} ${tag} | slot ${l.slot}/10 |
+    </div>`;
+  }).join("");
+}
+
+/* ---------------- INIT ---------------- */
+
+function initConfigUI() {
+  const s1 = document.getElementById("affix1");
+  const s2 = document.getElementById("affix2");
+  const s3 = document.getElementById("affix3");
+  const cs = document.getElementById("curseSelect");
+
+  populateSelect(s1, AFFIX_LIST);
+  populateSelect(s2, AFFIX_LIST);
+  populateSelect(s3, AFFIX_LIST);
+  populateSelect(cs, CURSE_LIST);
+
+  // sensible defaults
+  s1.value = "adrenaline";
+  s2.value = "preemptive strike";
+  s3.value = "heavy armor";
+  cs.value = "power";
+  document.getElementById("low3").checked = true;
+
+  // enforce uniqueness live
+  [s1, s2, s3].forEach(sel => sel.addEventListener("change", refreshAffixOptionsUnique));
+  refreshAffixOptionsUnique();
+
+  applyConfigAndReset();
+}
+
+initConfigUI();
+</script>
+
+</body>
+</html>
