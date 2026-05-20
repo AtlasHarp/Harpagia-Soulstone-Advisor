@@ -2,752 +2,1177 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Soulstone Simulator v1c</title>
-
+<title>Soulstone Enchanting Advisor</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  body {
-    font-family: system-ui, sans-serif;
-    background: #1e2530;
-    color: #e6e9ef;
-    padding: 20px;
-  }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background: radial-gradient(1200px 700px at 20% 0%, rgba(50,180,160,.06), transparent 60%),
+              radial-gradient(900px 600px at 90% 10%, rgba(242,200,107,.07), transparent 55%),
+              #09090d;
+  color:#dff0ec;
+  font-family:'Manrope','Segoe UI','Helvetica Neue',Arial,sans-serif;
+  font-size:14px;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  letter-spacing:0.2px;
+}
 
-  .container { max-width: 1050px; margin: auto; }
+/* ── Header ── */
+header{
+  background:linear-gradient(180deg,rgba(6,20,18,0.98) 0%,rgba(4,14,12,0.99) 100%);
+  border-bottom:1px solid rgba(70,180,160,0.12);
+  padding:16px 28px;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  box-shadow:0 4px 24px rgba(0,0,0,0.4);
+  animation: fadeDown 0.5s ease both;
+}
+header h1{
+  font-family:'Cinzel',serif;
+  color:#f2c86b;
+  font-size:22px;
+  font-weight:500;
+  letter-spacing:0.04em;
+  white-space:nowrap;
+}
+#solver-status{font-size:12px;color:#6a9890;display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap}
+.sdot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot-y{background:#f2c86b}.dot-g{background:#7ecfa0}.dot-r{background:#e06a6a}
+.prog-wrap{background:rgba(70,180,160,0.12);border-radius:4px;height:3px;width:140px;overflow:hidden;display:inline-block;vertical-align:middle}
+.prog-bar{height:100%;background:#f2c86b;width:0%;transition:width 0.4s}
 
-  .row { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
-  .box { background: #2b3545; padding: 15px; border-radius: 10px; flex: 1; min-width: 320px; }
+/* ── Tabs ── */
+.tabs{
+  display:flex;gap:8px;
+  background:rgba(5,16,14,0.9);
+  border-bottom:1px solid rgba(70,180,160,0.10);
+  padding:12px 28px;
+}
+.tab-btn{
+  background:rgba(242,200,107,0.07);
+  border:1px solid rgba(242,200,107,0.18);
+  color:#f6d88e;
+  cursor:pointer;font-size:13px;
+  padding:7px 20px;
+  border-radius:999px;
+  font-family:'Manrope',sans-serif;
+  transition:background 0.18s,border-color 0.18s,transform 0.1s;
+}
+.tab-btn:hover{background:rgba(242,200,107,0.14);border-color:rgba(242,200,107,0.34);transform:translateY(-1px)}
+.tab-btn.active{background:rgba(242,200,107,0.20);border-color:rgba(242,200,107,0.52);color:#fce9aa}
 
-  button {
-    background: #4f8cff;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-right: 8px;
-    margin-top: 8px;
-  }
-  button:hover { opacity: 0.92; }
-  button:disabled { opacity: 0.45; cursor: not-allowed; }
+/* ── Layout ── */
+.tab-content{display:none;padding:24px 28px;max-width:700px;margin:0 auto}
+.tab-content.active{display:block;animation: fadeUp 0.45s ease both;}
 
-  .bad { background: #c44; }
-  .ok  { background: #36b37e; }
+/* ── Chance row ── */
+.chance-row{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  margin-bottom:16px;padding:14px 20px;
+  background:rgba(8,22,20,0.72);
+  border:1px solid rgba(70,180,160,0.14);
+  border-left:3px solid rgba(242,200,107,0.4);
+  border-radius:16px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.25);
+}
+.chance-row-labels{display:flex;flex-direction:column;gap:3px}
+.chance-row label{color:#80c4be;white-space:nowrap;font-weight:500;font-size:14px}
+.chance-hint{font-size:11px;color:#3a6a64}
+.ci-display{
+  background:rgba(4,16,14,0.8);
+  border:1px solid rgba(242,200,107,0.28);
+  color:#f2c86b;
+  font-size:17px;font-weight:600;
+  padding:6px 18px;border-radius:999px;
+  font-family:'Manrope',sans-serif;
+  flex-shrink:0;
+}
 
-  select, input[type="checkbox"] {
-    margin-top: 6px;
-  }
+/* ── Stat cards ── */
+.stat-card{
+  background:rgba(8,22,20,0.72);
+  border:1px solid rgba(70,180,160,0.14);
+  border-left:3px solid rgba(242,200,107,0.35);
+  border-radius:18px;
+  padding:14px 18px;
+  margin-bottom:12px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.28),0 0 8px rgba(50,180,160,0.06);
+  transition:border-left-color 0.25s,box-shadow 0.25s;
+}
+.stat-card.highlighted{
+  border-left-color:rgba(126,207,160,0.85);
+  box-shadow:0 4px 24px rgba(0,0,0,0.32),0 0 14px rgba(126,207,160,0.18);
+}
+.stat-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.stat-name-label{font-family:'Cinzel',serif;font-weight:500;font-size:14px;letter-spacing:0.03em}
+.affix-color{color:#7ecfd4}
+.curse-color{color:#f5a9c9}
+.stat-goal-label{font-size:11px;color:#3a6a64;letter-spacing:0.02em}
 
-  select {
-    width: 100%;
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.15);
-    background: #121821;
-    color: #e6e9ef;
-    outline: none;
-  }
+.stat-inputs{display:flex;flex-direction:column;gap:10px}
+.record-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn-success,.btn-failure{
+  padding:8px 0;border:none;border-radius:8px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:filter 0.15s,transform 0.1s;letter-spacing:0.02em;
+}
+.btn-success{background:rgba(50,180,160,0.18);color:#7ecfd4;border:1px solid rgba(50,180,160,0.3)}
+.btn-failure{background:rgba(200,80,80,0.15);color:#e09090;border:1px solid rgba(200,80,80,0.25)}
+.btn-success:hover{filter:brightness(1.2)}
+.btn-failure:hover{filter:brightness(1.2)}
+.btn-success:active,.btn-failure:active{transform:scale(0.96)}
+.stat-counters{display:flex;align-items:center;justify-content:space-between}
+.counter-group{display:flex;flex-direction:column;align-items:center;gap:2px}
+.counter-label{font-size:10px;color:#4a7a74;text-transform:uppercase;letter-spacing:.6px}
+.counter-val{font-size:22px;font-weight:600;color:#f2c86b;line-height:1}
+.btn-reset{
+  background:none;border:1px solid rgba(70,180,160,0.15);border-radius:6px;
+  color:#3a6a64;font-size:10px;cursor:pointer;padding:3px 8px;letter-spacing:0.04em;
+  transition:color 0.15s,border-color 0.15s;
+}
+.btn-reset:hover{color:#7ecfd4;border-color:rgba(70,180,160,0.4)}
 
-  label {
-    display: block;
-    margin-top: 10px;
-    font-size: 13px;
-    opacity: 0.95;
-  }
+/* ── Diamonds ── */
+.diamonds{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.dia{width:13px;height:13px;border:2px solid;transform:rotate(45deg);border-radius:2px;transition:background 0.15s}
+.dia-affix-on {background:#3a9890;border-color:#7ecfd4}
+.dia-affix-off{background:transparent;border-color:rgba(70,180,160,0.18)}
+.dia-curse-on {background:#c97fa0;border-color:#f5a9c9}
+.dia-curse-off{background:transparent;border-color:rgba(245,169,201,0.15)}
 
-  .track {
-    margin-bottom: 14px;
-    padding: 10px;
-    border-radius: 10px;
-    background: rgba(0,0,0,0.15);
-  }
+/* ── Result box ── */
+.result-box{
+  background:rgba(8,22,20,0.72);
+  border:1px solid rgba(70,180,160,0.14);
+  border-left:3px solid rgba(126,207,160,0.5);
+  border-radius:18px;
+  padding:20px 18px;
+  margin-top:18px;
+  text-align:center;
+  min-height:100px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3),0 0 10px rgba(126,207,160,0.08);
+  transition:border-left-color 0.3s,box-shadow 0.3s;
+}
+.result-box.neutral{
+  border-left-color:rgba(70,180,160,0.22);
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);
+}
+.result-box.warn{
+  border-left-color:rgba(242,167,107,0.6);
+  box-shadow:0 4px 20px rgba(0,0,0,0.3),0 0 10px rgba(242,167,107,0.1);
+}
+.result-box.dead{
+  border-left-color:rgba(220,90,90,0.5);
+  box-shadow:0 4px 20px rgba(0,0,0,0.3),0 0 10px rgba(220,90,90,0.08);
+}
+.result-box.won{
+  border-left-color:rgba(126,207,160,0.9);
+  box-shadow:0 4px 20px rgba(0,0,0,0.3),0 0 18px rgba(126,207,160,0.2);
+}
+.result-box.won .result-action{color:#7ecfd4}
+.result-action{font-family:'Cinzel',serif;font-size:20px;font-weight:500;color:#f2c86b;letter-spacing:0.03em}
+.result-box.warn .result-action{color:#f2a96b}
+.result-box.dead .result-action{color:#e06a6a}
+.result-prob{font-size:13px;color:#6a9890;line-height:1.5}
+.winbar-wrap{width:100%;background:rgba(70,180,160,0.10);border-radius:4px;height:6px;overflow:hidden;margin-top:2px}
+.winbar{height:100%;background:linear-gradient(90deg,rgba(220,90,90,0.9),#f2c86b,#7ecfa0);border-radius:4px;transition:width 0.4s;width:0%}
 
-  .track-top {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-  }
+/* ── Buttons ── */
+.btn{
+  background:rgba(242,200,107,0.07);
+  border:1px solid rgba(242,200,107,0.20);
+  color:#f6d88e;
+  cursor:pointer;font-size:13px;
+  padding:8px 18px;border-radius:999px;
+  font-family:'Manrope',sans-serif;
+  transition:background 0.18s,border-color 0.18s,transform 0.1s;
+}
+.btn:hover{background:rgba(242,200,107,0.15);border-color:rgba(242,200,107,0.38);transform:translateY(-1px)}
+.btn.primary{background:rgba(126,207,160,0.12);border-color:rgba(126,207,160,0.35);color:#7ecfa0}
+.btn.primary:hover{background:rgba(126,207,160,0.2);border-color:rgba(126,207,160,0.55)}
+.btn:disabled{opacity:.3;cursor:not-allowed;pointer-events:none;transform:none}
 
-  .meta {
-    opacity: 0.9;
-    font-size: 13px;
-  }
+/* ── Screen capture ── */
+.ctrl-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+#canvas-wrap{position:relative;display:inline-block;max-width:100%;margin-top:8px}
+#cap-canvas{display:block;max-width:100%;border:1px solid rgba(70,180,160,0.14);border-radius:12px;cursor:crosshair}
+.region-rect{position:absolute;border:2px solid #f2c86b;pointer-events:none;box-shadow:0 0 0 9999px rgba(0,0,0,.4)}
+.hint{font-size:12px;color:#3a6a64;margin-top:8px;line-height:1.7}
+.hint strong{color:#80c4be}
+.badge{background:rgba(126,207,160,0.1);border:1px solid rgba(126,207,160,0.3);border-radius:10px;color:#7ecfa0;font-size:11px;padding:3px 10px}
 
-  .gems {
-    display: flex;
-    gap: 6px;
-    margin-top: 8px;
-    flex-wrap: wrap;
-  }
-
-  .gem {
-    width: 14px;
-    height: 14px;
-    border-radius: 999px;
-    background: #8892a0; /* unused/gray */
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
-  }
-
-  .gem.success { background: #3ad46f; } /* green */
-  .gem.fail { background: #e45555; }    /* red */
-
-  .log {
-    background: #121821;
-    padding: 10px;
-    height: 270px;
-    overflow-y: auto;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 13px;
-    border-radius: 8px;
-  }
-
-  .successTxt { color: #9dff9d; }
-  .failTxt { color: #ff9d9d; }
-
-  .hint {
-    font-size: 13px;
-    opacity: 0.9;
-    margin-top: 8px;
-    line-height: 1.35;
-  }
-
-  .inline {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-  }
-
-  .pill {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.08);
-    font-size: 12px;
-    opacity: 0.95;
-  }
+/* ── OCR state ── */
+.ocr-state{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;font-size:12px;color:#6a9890}
+.ocr-cell{
+  background:rgba(8,22,20,0.6);
+  border:1px solid rgba(70,180,160,0.10);
+  border-radius:10px;padding:7px 12px;
+}
+.ocr-cell strong{color:#f2c86b}
+@keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeUp   { from{opacity:0;transform:translateY(12px)}  to{opacity:1;transform:translateY(0)} }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>Soulstone Enchanting Helper (v1c)</h1>
+<header>
+  <h1>Soulstone Enchanting Advisor</h1>
+  <div id="solver-status">
+    <span class="sdot dot-y" id="sdot"></span>
+    <span id="stext">Solving optimal policy…</span>
+    <span class="prog-wrap"><span id="prog-bar" class="prog-bar"></span></span>
+    <span id="prog-pct" style="font-size:11px;color:#3a6a64"></span>
+  </div>
+</header>
 
-  <div class="row">
-    <div class="box">
-      <h2>Configure Soulstone</h2>
+<div class="tabs">
+  <button class="tab-btn active" data-tab="manual">Manual Entry</button>
+  <!-- <button class="tab-btn" data-tab="screen">Screen Capture</button> -->
+</div>
 
-      <label>Affix Slot 1</label>
-      <select id="affix1"></select>
-      <div class="inline">
-        <input type="checkbox" id="low1">
-        <span class="pill">less desirable</span>
-      </div>
+<!-- ═══ MANUAL TAB ═══ -->
+<div id="tab-manual" class="tab-content active">
 
-      <label>Affix Slot 2</label>
-      <select id="affix2"></select>
-      <div class="inline">
-        <input type="checkbox" id="low2">
-        <span class="pill">less desirable</span>
-      </div>
+  <div class="hint" style="margin-bottom:14px;">
+    This tool uses <strong>Dynamic Programming</strong> to solve the optimal enchanting policy across all possible game states, guaranteeing the best possible recommendation at every step. It targets a distribution of <strong>9 / 6 / 3</strong> successes across the three affixes — assigned dynamically, so whichever affix is best positioned becomes the 9-target, and so on. If the current state makes that distribution unreachable, the result will show <strong>9/6/3 Unachievable</strong>.
+  </div>
 
-      <label>Affix Slot 3</label>
-      <select id="affix3"></select>
-      <div class="inline">
-        <input type="checkbox" id="low3">
-        <span class="pill">less desirable</span>
-      </div>
-
-      <label>Curse</label>
-      <select id="curseSelect"></select>
-
-      <button onclick="applyConfigAndReset()">Apply / Reset With These</button>
-
-      <div class="hint" id="configNote">
-        Picks are unique by default (dropdowns will avoid duplicates).
-      </div>
+  <div class="chance-row">
+    <div class="chance-row-labels">
+      <label>Current Success Chance</label>
+      <span class="chance-hint">Oscillates 25–75% with each enchant result</span>
     </div>
+    <button id="global-reset-btn" class="btn-reset" style="flex-shrink:0;padding:8px 16px;font-size:12.6px;white-space:nowrap;color:#e09090;border-color:rgba(200,80,80,0.25);">Reset Tool</button>
+    <span id="ci-display" class="ci-display">75%</span>
+  </div>
 
-    <div class="box">
-      <h2>Status</h2>
-      <div>Success Chance: <strong id="chance">75%</strong></div>
-      <div>Total Slots Used: <strong id="slotsUsed">0 / 40</strong></div>
-      <div>Total Points Gained: <strong id="pointsGained">0</strong></div>
-      <div class="hint">
-        Green gem = success (+1 point). Red gem = fail (slot consumed, +0 points).<br>
-        Completion is when all 40 slots are consumed.
-      </div>
-    </div>
+  <div id="stat-rows"></div>
 
-    <div class="box">
-      <h2>Advisor Mode (your in-game clicks)</h2>
-
-      <button onclick="getRecommendationOnly()">Get Recommendation</button>
-      <button class="ok" onclick="recordOutcome(true)" id="btnSuccess" disabled>Record Success</button>
-      <button class="bad" onclick="recordOutcome(false)" id="btnFail" disabled>Record Fail</button>
-
-      <div class="hint" id="advisorText">Grab a recommendation, do it in-game, then record success/fail here.</div>
-
-      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.12); margin:14px 0;">
-
-      <h2>Optional</h2>
-      <button onclick="doFullSim()">Run Full Simulation (internal RNG)</button>
-      <button class="bad" onclick="resetStone()">Reset</button>
-
-      <div class="hint">
-        “Full Simulation” uses browser RNG. Advisor mode does not.
-      </div>
+  <div class="result-box neutral" id="m-result">
+    <div class="result-action" id="m-action">Waiting for solver…</div>
+    <div class="result-prob" id="m-prob"></div>
+    <div class="winbar-wrap" id="m-wbar-wrap" style="display:none">
+      <div class="winbar" id="m-wbar"></div>
     </div>
   </div>
 
-  <div class="row">
-    <div class="box">
-      <h2>Affixes (manual buttons still available)</h2>
-      <div id="affixes"></div>
-    </div>
+</div>
 
-    <div class="box">
-      <h2>Curse</h2>
-      <div id="curse"></div>
+<!-- ═══ SCREEN CAPTURE TAB ═══ -->
+<div id="tab-screen" class="tab-content">
+
+  <div class="ctrl-row">
+    <button class="btn primary" id="btn-cap">▶ Start Screen Capture</button>
+    <button class="btn" id="btn-cal" disabled>✚ Calibrate Region</button>
+    <button class="btn" id="btn-snap" disabled>⟳ Analyze Frame</button>
+    <button class="btn" id="btn-auto" disabled>Auto (1 s)</button>
+    <span class="badge" id="live-badge" style="display:none">● LIVE</span>
+  </div>
+
+  <div class="hint" id="cap-hint">
+    Click <strong>Start Screen Capture</strong> and select your scrcpy window.<br>
+    Then <strong>Calibrate Region</strong> → click two corners of the enchanting panel.
+  </div>
+
+  <div id="canvas-wrap" style="display:none">
+    <canvas id="cap-canvas"></canvas>
+    <div id="reg-rect" class="region-rect" style="display:none"></div>
+  </div>
+
+  <div class="ocr-state" id="ocr-state" style="display:none">
+    <div class="ocr-cell">Chance: <strong id="ocr-chance">—</strong></div>
+    <div class="ocr-cell">Vengeance: <strong id="ocr-v">—</strong></div>
+    <div class="ocr-cell">Juggernaut: <strong id="ocr-j">—</strong></div>
+    <div class="ocr-cell">Ability Master: <strong id="ocr-a">—</strong></div>
+    <div class="ocr-cell">Power Curse: <strong id="ocr-c">—</strong></div>
+    <div class="ocr-cell" id="ocr-status-cell">Status: <strong id="ocr-status">—</strong></div>
+  </div>
+
+  <div class="result-box neutral" id="s-result" style="display:none">
+    <div class="result-action" id="s-action">—</div>
+    <div class="result-prob" id="s-prob"></div>
+    <div class="winbar-wrap" id="s-wbar-wrap" style="display:none">
+      <div class="winbar" id="s-wbar"></div>
     </div>
   </div>
 
-  <div class="box">
-    <h2>Log</h2>
-    <div id="log" class="log"></div>
-  </div>
 </div>
 
 <script>
-/* ---------------- DATA LISTS ---------------- */
+// ═══════════════════════════════════════════════════════════════════════
+// CONSTANTS (shared between main thread and worker)
+// ═══════════════════════════════════════════════════════════════════════
+const CHANCE_LIST = [25,35,45,55,65,75];
+const START_CI    = 5;
+const MAX_ATT     = 10;
+const STAT_NAMES  = ['Affix 1','Affix 2','Affix 3','Curse'];
+const STAT_CURSE  = [false,false,false,true];
+const STAT_GOALS  = ['≥ 9 successes','≥ 6 successes','≥ 3 successes','≤ 4 successes'];
+const WIN_MIN     = [3,3,3,0];
+const WIN_MAX     = [10,10,10,4];
+const AFF_GOALS   = [9,6,3];
+// Chance transitions on success/fail
+const CI_WIN  = [0,0,1,2,3,4]; // success → chance decreases
+const CI_LOSE = [1,2,3,4,5,5]; // fail    → chance increases
 
-const AFFIX_LIST = [
-  "vengeance","juggernaut","ability master","hexed","adrenaline","precision",
-  "blunt force","bloodlust","preemptive strike","tenacity","fortitude","merciless",
-  "heavy armor","emergency rescue","bountiful","haste"
-];
+// ═══════════════════════════════════════════════════════════════════════
+// WEB WORKER (inline via Blob)
+// ═══════════════════════════════════════════════════════════════════════
+function workerMain() {
+  const CHANCE_LIST = [25,35,45,55,65,75];
+  const START_CI = 5;
+  const MAX_ATT = 10;
+  const WIN_MIN = [3,3,3,0];
+  const WIN_MAX = [10,10,10,4];
+  const AFF_GOALS = [9,6,3];
+  const CI_WIN  = [0,0,1,2,3,4];
+  const CI_LOSE = [1,2,3,4,5,5];
+  const PROBS   = [.25,.35,.45,.55,.65,.75];
 
-const CURSE_LIST = ["power","speed","defence","crit"];
-
-/* ---------------- CORE MODEL ---------------- */
-
-function createTrack(name, priority) {
-  return { name, priority, attempts: [] }; // attempts holds true/false, max 10
-}
-
-function createSoulstoneStateFromConfig(config) {
-  return {
-    maxChance: 75,
-    minChance: 25,
-    chanceStep: 10,
-    chance: 75,
-
-    affixes: [
-      createTrack(config.affix1, config.low1 ? "low" : "high"),
-      createTrack(config.affix2, config.low2 ? "low" : "high"),
-      createTrack(config.affix3, config.low3 ? "low" : "high")
-    ],
-
-    curse: createTrack(config.curse + " curse", "curse"),
-    log: []
-  };
-}
-
-let state = null;
-
-// stores the last recommended move (for advisor mode)
-let pendingRecommendation = null;
-
-function clampChance(x) {
-  return Math.max(state.minChance, Math.min(state.maxChance, x));
-}
-
-function rollSuccess(chancePercent) {
-  return Math.random() * 100 < chancePercent;
-}
-
-function trackPoints(track) {
-  return track.attempts.reduce((acc, v) => acc + (v === true ? 1 : 0), 0);
-}
-
-function trackSlotsUsed(track) {
-  return track.attempts.length;
-}
-
-function totalSlotsUsed() {
-  const a = state.affixes.reduce((acc, t) => acc + trackSlotsUsed(t), 0);
-  return a + trackSlotsUsed(state.curse);
-}
-
-function totalPointsGained() {
-  const a = state.affixes.reduce((acc, t) => acc + trackPoints(t), 0);
-  return a + trackPoints(state.curse);
-}
-
-function isFinished() {
-  return totalSlotsUsed() >= 40;
-}
-
-// Apply one attempt. If forcedOutcome is true/false, we do not RNG.
-function applyAttempt(type, index = null, forcedOutcome = null) {
-  if (isFinished()) return;
-
-  let track;
-  if (type === "affix") track = state.affixes[index];
-  else track = state.curse;
-
-  if (!track) return;
-  if (track.attempts.length >= 10) return;
-
-  const before = state.chance;
-  const success = (forcedOutcome === null) ? rollSuccess(state.chance) : forcedOutcome;
-
-  // consume slot always
-  track.attempts.push(success);
-
-  // update chance
-  if (success) {
-    if (state.chance > state.minChance) {
-      state.chance = clampChance(state.chance - state.chanceStep);
-    } else {
-      state.chance = state.minChance;
+  // Build (att,suc) state table for one stat
+  function makeStatTable(winMin, winMax) {
+    const attArr=[], sucArr=[];
+    const MAP_SZ = (MAX_ATT+1)*100 + MAX_ATT + 1;
+    const idxMap = new Int16Array(MAP_SZ).fill(-1);
+    for (let att=0; att<=MAX_ATT; att++) {
+      for (let suc=0; suc<=att; suc++) {
+        if (suc + (MAX_ATT-att) < winMin) continue;
+        if (suc > winMax) continue;
+        const i = attArr.length;
+        idxMap[att*100+suc] = i;
+        attArr.push(att); sucArr.push(suc);
+      }
     }
-  } else {
-    state.chance = clampChance(state.chance + state.chanceStep);
-  }
-
-  state.log.push({
-    track: track.name,
-    type,
-    success,
-    chanceBefore: before,
-    chanceAfter: state.chance,
-    slot: track.attempts.length,
-    pointsNow: trackPoints(track),
-    totalSlots: totalSlotsUsed(),
-    totalPoints: totalPointsGained()
-  });
-
-  render();
-}
-
-/* ---------------- RECOMMENDER (still v1, tunable later) ---------------- */
-
-function chooseBestUpgrade() {
-  const c = state.chance;
-
-  const cursePts = trackPoints(state.curse);
-  const curseSlotsUsed = trackSlotsUsed(state.curse);
-  const curseSlotsLeft = 10 - curseSlotsUsed;
-
-  const curseDead = (cursePts >= 5); // 5+ is same effect, so extra points don't matter
-
-  // helper: count points/slots for affix
-  function info(a) {
-    const pts = trackPoints(a);
-    const used = trackSlotsUsed(a);
-    const left = 10 - used;
-    const need = Math.max(0, 6 - pts);
-    return { pts, used, left, need };
-  }
-
-  function protectLastSlotForPremium(a) {
-    const { need, left } = info(a);
-    // exactly 5 points with 1 slot left to reach 6
-    return (need === 1 && left === 1);
-  }
-
-  // emergency if affix is at real risk of failing to reach 6 with remaining slots
-  // (simple heuristic, tuned to your examples)
-  // "Must act now" = no slack left (or impossible already)
-
-
-
-
-  // choose which affix is "best" among a set: prefer more behind <6, then fewer slots left
-  function betterAffixIndex(idxA, idxB) {
-    const A = state.affixes[idxA];
-    const B = state.affixes[idxB];
-    const a = info(A);
-    const b = info(B);
-
-    // prefer the one still under 6
-    if ((a.pts < 6) !== (b.pts < 6)) return (a.pts < 6) ? idxA : idxB;
-
-    // if both under 6: prefer fewer points (more behind)
-    if (a.pts !== b.pts) return (a.pts < b.pts) ? idxA : idxB;
-
-    // if tie: prefer less runway (more urgent)
-    if (a.left !== b.left) return (a.left < b.left) ? idxA : idxB;
-
-    // final tie: prefer non-low priority (more desirable)
-    if (A.priority !== B.priority) return (A.priority === "high") ? idxA : idxB;
-
-    return idxA;
-  }
-
-  // available affix indices (not full)
-  const affixAvail = state.affixes
-    .map((a, i) => ({ a, i, inf: info(a) }))
-    .filter(x => x.inf.left > 0);
-
-  // if nothing available, only curse remains
-  if (affixAvail.length === 0) {
-    if (curseSlotsLeft > 0 && c < 65) return { type: "curse", why: "Only curse slots remain" };
-    return { type: "none", why: "No moves left" };
-  }
-
-  // split affixes by priority
-  const highIdxs = affixAvail.filter(x => x.a.priority === "high").map(x => x.i);
-  const lowIdxs  = affixAvail.filter(x => x.a.priority === "low").map(x => x.i);
-
-  // pick "best" high and any affix by catch-up/urgency
-  function pickBestFrom(list) {
-    if (list.length === 0) return -1;
-    return list.reduce((best, cur) => best === -1 ? cur : betterAffixIndex(best, cur), -1);
-  }
-
-  const bestHigh = pickBestFrom(highIdxs);
-  const bestAny  = pickBestFrom(affixAvail.map(x => x.i));
-  const bestLow  = pickBestFrom(lowIdxs);
-
-  // --- HARD RULE: never put 65%+ into curse ---
-  if (c >= 65) {
-    // prefer high-priority affix that is most behind under 6
-    if (bestHigh !== -1) {
-      return { type: "affix", index: bestHigh, why: "65%+ is premium → never curse, feed best desirable" };
+    const n = attArr.length;
+    const attA = new Int32Array(attArr);
+    const sucA = new Int32Array(sucArr);
+    const succT = new Int32Array(n).fill(-1);
+    const failT = new Int32Array(n).fill(-1);
+    for (let i=0; i<n; i++) {
+      const att=attA[i], suc=sucA[i];
+      if (att < MAX_ATT) {
+        const sk=(att+1)*100+(suc+1), fk=(att+1)*100+suc;
+        if (sk < MAP_SZ) succT[i] = idxMap[sk];
+        if (fk < MAP_SZ) failT[i] = idxMap[fk];
+      }
     }
-    return { type: "affix", index: bestAny, why: "65%+ is premium → never curse, use best remaining affix" };
+    return {n, attA, sucA, succT, failT, idxMap};
   }
 
-  // --- LOW ODDS: default burn on curse, unless affix emergency ---
-  if (c <= 35) {
-    // if any high-priority affix is in emergency, salvage it instead
-
-
-    // otherwise burn curse if it has slots left
-    if (curseSlotsLeft > 0) {
-      if (!curseDead) return { type: "curse", why: "25–35% → burn curse slots (aim for fails, keep curse <5)" };
-      return { type: "curse", why: "25–35% → curse already 5+, burn freely" };
-    }
-
-    // if curse full, burn on least valuable affix (low priority or already >=6)
-    if (bestLow !== -1) return { type: "affix", index: bestLow, why: "Curse slots gone → burn low odds on low-priority affix" };
-    return { type: "affix", index: bestAny, why: "Curse slots gone → burn low odds on least urgent affix available" };
+  // Group state indices by att value
+  function byAtt(table) {
+    const groups = Array.from({length:MAX_ATT+1}, ()=>[]);
+    for (let i=0; i<table.n; i++) groups[table.attA[i]].push(i);
+    return groups;
   }
 
-  // --- MID ODDS (45–55-ish): feed low-priority if chosen, otherwise catch up desirables ---
-  // --- MID ODDS (45–55-ish): bias toward low-priority early, otherwise catch up desirables ---
-  if (c >= 45 && c <= 55) {
-    const early = totalSlotsUsed() < 12; // tweak this number if you want (start-bias window)
+  let _V=null, _P=null, _s1,_s2,_s3,_s4;
+  let _vm,_jm,_am,_cm;
 
-    const highUnder6 = highIdxs
-      .filter(i => info(state.affixes[i]).pts < 6)
-      .filter(i => !protectLastSlotForPremium(state.affixes[i]));
+  function solve() {
+    const tV=makeStatTable(WIN_MIN[0],WIN_MAX[0]);
+    const tJ=makeStatTable(WIN_MIN[1],WIN_MAX[1]);
+    const tA=makeStatTable(WIN_MIN[2],WIN_MAX[2]);
+    const tC=makeStatTable(WIN_MIN[3],WIN_MAX[3]);
+    const NV=tV.n, NJ=tJ.n, NA=tA.n, NC=tC.n;
+    const s4=NC, s3=NA*s4, s2=NJ*s3, s1=NV*s2;
+    const V = new Float32Array(6*s1);
+    const POLICY = new Uint8Array(6*s1);
 
+    _vm=tV.idxMap; _jm=tJ.idxMap; _am=tA.idxMap; _cm=tC.idxMap;
 
+    // Terminal win states
+    const vt=tV.attA, jt=tJ.attA, at_=tA.attA, ct=tC.attA;
+    const vs=tV.sucA, js=tJ.sucA, as_=tA.sucA, cs_=tC.sucA;
+    const vByA=byAtt(tV), jByA=byAtt(tJ), aByA=byAtt(tA), cByA=byAtt(tC);
 
-
-    // EARLY BIAS:
-    // If it's early and we have a low-priority affix, spend more 45–55 on it,
-    // as long as we’re not ignoring a badly-behind desirable.
-    if (early && bestLow !== -1) {
-      // “badly behind” guard: if any desirable is REALLY lagging (0–1 points),
-      // prioritize catching it up instead of feeding low-priority.
-      const veryBehind = highIdxs.some(i => info(state.affixes[i]).pts <= 1);
-      if (!veryBehind) {
-        return { type: "affix", index: bestLow, why: "45–55% → early bias, feed less desirable" };
+    for (const vi of vByA[MAX_ATT])
+    for (const ji of jByA[MAX_ATT])
+    for (const ai of aByA[MAX_ATT])
+    for (const cs of cByA[MAX_ATT]) {
+      let s0=vs[vi],s1_=js[ji],s2_=as_[ai];
+      // inline sort 3
+      if(s0<s1_){let t=s0;s0=s1_;s1_=t}
+      if(s1_<s2_){let t=s1_;s1_=s2_;s2_=t}
+      if(s0<s1_){let t=s0;s0=s1_;s1_=t}
+      if(s0>=AFF_GOALS[0] && s1_>=AFF_GOALS[1] && s2_>=AFF_GOALS[2] && cs_[cs]<=WIN_MAX[3]) {
+        const base = vi*s2 + ji*s3 + ai*s4 + cs;
+        for(let ci=0;ci<6;ci++) V[ci*s1+base]=1.0;
       }
     }
 
-    // Normal behavior: push desirables under 6 using utility odds
-    // Normal behavior: ONLY use utility odds on desirables under 6 if runway is good so far.
-    // Example "good runway": around 60%+ success rate so far (tuneable).
-    function goodRunway(i) {
-      const inf = info(state.affixes[i]);
-      const used = inf.used;
-      const pts = inf.pts;
+    // DP: descending total attempts
+    const t0=Date.now();
+    let statesDone=0;
 
-      // early taps: still judge a bit, but don't overreact
-      if (used === 0) return true;
-      if (used === 1) return pts >= 0; // always true
-      if (used === 2) return pts >= 1; // 0/2 should be "bad" now
+    for(let tot=4*MAX_ATT-1; tot>=0; tot--) {
+      for(let va=Math.min(tot,MAX_ATT);va>=0;va--) {
+        const visArr=vByA[va];
+        if(!visArr.length) continue;
+        for(let ja=Math.min(tot-va,MAX_ATT);ja>=0;ja--) {
+          const jisArr=jByA[ja];
+          if(!jisArr.length) continue;
+          for(let aa=Math.min(tot-va-ja,MAX_ATT);aa>=0;aa--) {
+            const ca=tot-va-ja-aa;
+            if(ca<0||ca>MAX_ATT) continue;
+            const aisArr=aByA[aa], cisArr=cByA[ca];
+            if(!aisArr.length||!cisArr.length) continue;
 
-      // stricter runway gate:
-      // requires being clearly ahead of schedule to justify spending 45–55 here
-      return pts > Math.floor(used * 0.7);
+            for(let vi_k=0;vi_k<visArr.length;vi_k++) {
+            const vi=visArr[vi_k];
+            const pV=vs[vi]+(MAX_ATT-va);
+            for(let ji_k=0;ji_k<jisArr.length;ji_k++) {
+            const ji=jisArr[ji_k];
+            const pJ=js[ji]+(MAX_ATT-ja);
+            for(let ai_k=0;ai_k<aisArr.length;ai_k++) {
+            const ai=aisArr[ai_k];
+            const pA=as_[ai]+(MAX_ATT-aa);
+
+            // Inline sort 3 potentials for can-win
+            let p0=pV,p1=pJ,p2=pA;
+            if(p0<p1){let t=p0;p0=p1;p1=t}
+            if(p1<p2){let t=p1;p1=p2;p2=t}
+            if(p0<p1){let t=p0;p0=p1;p1=t}
+            if(p0<AFF_GOALS[0]||p1<AFF_GOALS[1]||p2<AFF_GOALS[2]) continue;
+
+            const base0 = vi*s2+ji*s3+ai*s4;
+
+            for(let cs_k=0;cs_k<cisArr.length;cs_k++) {
+            const cs=cisArr[cs_k];
+            const base=base0+cs;
+
+            // Compute best action for all 6 ci tiers
+            let b0=-1,b1=-1,b2=-1,b3=-1,b4=-1,b5=-1;
+            let p0_=-1,p1_=-1,p2_=-1,p3_=-1,p4_=-1,p5_=-1; // policies per ci
+
+            // Helper: try action, update best
+            // Action 0: Vengeance
+            if(va<MAX_ATT) {
+              const ns=tV.succT[vi], nf=tV.failT[vi];
+              const bs0=ns>=0?ns*s2+ji*s3+ai*s4+cs:-1;
+              const bf0=nf>=0?nf*s2+ji*s3+ai*s4+cs:-1;
+              for(let ci=0;ci<6;ci++) {
+                const vw=bs0>=0?V[CI_WIN[ci]*s1+bs0]:0;
+                const vl=bf0>=0?V[CI_LOSE[ci]*s1+bf0]:0;
+                const val=PROBS[ci]*vw+(1-PROBS[ci])*vl;
+                switch(ci){
+                  case 0:if(val>b0){b0=val;p0_=0}break;
+                  case 1:if(val>b1){b1=val;p1_=0}break;
+                  case 2:if(val>b2){b2=val;p2_=0}break;
+                  case 3:if(val>b3){b3=val;p3_=0}break;
+                  case 4:if(val>b4){b4=val;p4_=0}break;
+                  case 5:if(val>b5){b5=val;p5_=0}break;
+                }
+              }
+            }
+            // Action 1: Juggernaut
+            if(ja<MAX_ATT) {
+              const ns=tJ.succT[ji], nf=tJ.failT[ji];
+              const bs=ns>=0?vi*s2+ns*s3+ai*s4+cs:-1;
+              const bf=nf>=0?vi*s2+nf*s3+ai*s4+cs:-1;
+              for(let ci=0;ci<6;ci++) {
+                const vw=bs>=0?V[CI_WIN[ci]*s1+bs]:0;
+                const vl=bf>=0?V[CI_LOSE[ci]*s1+bf]:0;
+                const val=PROBS[ci]*vw+(1-PROBS[ci])*vl;
+                switch(ci){
+                  case 0:if(val>b0){b0=val;p0_=1}break;
+                  case 1:if(val>b1){b1=val;p1_=1}break;
+                  case 2:if(val>b2){b2=val;p2_=1}break;
+                  case 3:if(val>b3){b3=val;p3_=1}break;
+                  case 4:if(val>b4){b4=val;p4_=1}break;
+                  case 5:if(val>b5){b5=val;p5_=1}break;
+                }
+              }
+            }
+            // Action 2: Ability Master
+            if(aa<MAX_ATT) {
+              const ns=tA.succT[ai], nf=tA.failT[ai];
+              const bs=ns>=0?vi*s2+ji*s3+ns*s4+cs:-1;
+              const bf=nf>=0?vi*s2+ji*s3+nf*s4+cs:-1;
+              for(let ci=0;ci<6;ci++) {
+                const vw=bs>=0?V[CI_WIN[ci]*s1+bs]:0;
+                const vl=bf>=0?V[CI_LOSE[ci]*s1+bf]:0;
+                const val=PROBS[ci]*vw+(1-PROBS[ci])*vl;
+                switch(ci){
+                  case 0:if(val>b0){b0=val;p0_=2}break;
+                  case 1:if(val>b1){b1=val;p1_=2}break;
+                  case 2:if(val>b2){b2=val;p2_=2}break;
+                  case 3:if(val>b3){b3=val;p3_=2}break;
+                  case 4:if(val>b4){b4=val;p4_=2}break;
+                  case 5:if(val>b5){b5=val;p5_=2}break;
+                }
+              }
+            }
+            // Action 3: Curse
+            if(ca<MAX_ATT) {
+              const ns=tC.succT[cs], nf=tC.failT[cs];
+              const bs=ns>=0?vi*s2+ji*s3+ai*s4+ns:-1;
+              const bf=nf>=0?vi*s2+ji*s3+ai*s4+nf:-1;
+              for(let ci=0;ci<6;ci++) {
+                const vw=bs>=0?V[CI_WIN[ci]*s1+bs]:0;
+                const vl=bf>=0?V[CI_LOSE[ci]*s1+bf]:0;
+                const val=PROBS[ci]*vw+(1-PROBS[ci])*vl;
+                switch(ci){
+                  case 0:if(val>b0){b0=val;p0_=3}break;
+                  case 1:if(val>b1){b1=val;p1_=3}break;
+                  case 2:if(val>b2){b2=val;p2_=3}break;
+                  case 3:if(val>b3){b3=val;p3_=3}break;
+                  case 4:if(val>b4){b4=val;p4_=3}break;
+                  case 5:if(val>b5){b5=val;p5_=3}break;
+                }
+              }
+            }
+
+            // Write results
+            if(b0>=0){V[0*s1+base]=b0;POLICY[0*s1+base]=p0_}
+            if(b1>=0){V[1*s1+base]=b1;POLICY[1*s1+base]=p1_}
+            if(b2>=0){V[2*s1+base]=b2;POLICY[2*s1+base]=p2_}
+            if(b3>=0){V[3*s1+base]=b3;POLICY[3*s1+base]=p3_}
+            if(b4>=0){V[4*s1+base]=b4;POLICY[4*s1+base]=p4_}
+            if(b5>=0){V[5*s1+base]=b5;POLICY[5*s1+base]=p5_}
+
+            statesDone++;
+            } // cs
+            } // ai
+            } // ji
+            } // vi
+          }
+        }
+      }
+
+      // Report after every level so the bar never looks frozen
+      const elapsed=((Date.now()-t0)/1000).toFixed(1);
+      const pct=Math.round((4*MAX_ATT-tot)/(4*MAX_ATT)*100);
+      self.postMessage({type:'progress', pct, elapsed, states:statesDone});
     }
 
+    _V=V; _P=POLICY; _s1=s1; _s2=s2; _s3=s3; _s4=s4;
 
-    const highUnder6GoodRunway = highUnder6.filter(i => goodRunway(i));
+    const vi0=tV.idxMap[0], ji0=tJ.idxMap[0], ai0=tA.idxMap[0], cs0=tC.idxMap[0];
+    const startProb = V[START_CI*s1 + vi0*s2 + ji0*s3 + ai0*s4 + cs0];
+    const elapsed=(Date.now()-t0)/1000;
 
-    if (highUnder6GoodRunway.length > 0) {
-      const pick = pickBestFrom(highUnder6GoodRunway);
-      return { type: "affix", index: pick, why: "45–55% → desirables under 6 but runway looks good → utility is fine" };
-    }
-
-    // If desirables are under 6 but runway looks bad, don't waste utility odds trying to fix.
-    // Save pressure for premium odds; use low-priority here if possible.
-    if (highUnder6.length > 0 && bestLow !== -1) {
-      return { type: "affix", index: bestLow, why: "45–55% → desirables under 6 but runway is bad → feed less desirable instead" };
-    }
-
-
-    // If desirables are safe, feed low-priority
-    if (bestLow !== -1) {
-      return { type: "affix", index: bestLow, why: "45–55% → feed less desirable (good band for it)" };
-    }
-
-    return { type: "affix", index: bestAny, why: "45–55% → best remaining affix" };
+    self.postMessage({
+      type:'done',
+      NV,NJ,NA,NC,s1,s2,s3,s4,
+      vIdxMap:tV.idxMap, jIdxMap:tJ.idxMap,
+      aIdxMap:tA.idxMap, cIdxMap:tC.idxMap,
+      startProb, elapsed:elapsed.toFixed(1)
+    }, [tV.idxMap.buffer, tJ.idxMap.buffer, tA.idxMap.buffer, tC.idxMap.buffer]);
   }
 
-  // --- MID-HIGH ODDS (55–65): treat like premium-lite ---
-  if (c > 55 && c < 65) {
-    const highUnder6 = highIdxs.filter(i => info(state.affixes[i]).pts < 6);
-    if (highUnder6.length > 0) {
-      const pick = pickBestFrom(highUnder6);
-      return { type: "affix", index: pick, why: "55–65% → premium-lite, push desirables under 6" };
-    }
-    // if all desirables safe, now you can feed low-priority or cooled
-    if (bestLow !== -1) return { type: "affix", index: bestLow, why: "55–65% → desirables safe, feed low-priority/cooled" };
-    return { type: "affix", index: bestAny, why: "55–65% → desirables safe, use best remaining affix" };
-  }
-
-  // --- OTHER MID (35–65, excluding >=65 already handled): mixed play ---
-  // If curse is still protected (<5), avoid touching it unless we're intentionally burning (mostly at low odds).
-  // If curse is dead (>=5), it can take bad-ish odds, but never 65+ (already gated).
-  if (curseSlotsLeft > 0 && curseDead && c < 45) {
-    return { type: "curse", why: "Curse is 5+ and odds are not premium → safe trash can" };
-  }
-
-  // default: push desirables under 6, else use low-priority, else any
-  const highUnder6 = highIdxs.filter(i => info(state.affixes[i]).pts < 6);
-  if (highUnder6.length > 0) {
-    const pick = pickBestFrom(highUnder6);
-    return { type: "affix", index: pick, why: "Default → push desirables under 6" };
-  }
-
-  if (bestLow !== -1) return { type: "affix", index: bestLow, why: "Default → feed low-priority / cooled affix" };
-  return { type: "affix", index: bestAny, why: "Default → use best remaining affix" };
-}
-
-function setAdvisorText(t) {
-  document.getElementById("advisorText").textContent = t;
-}
-
-function setAdvisorButtons(enabled) {
-  document.getElementById("btnSuccess").disabled = !enabled;
-  document.getElementById("btnFail").disabled = !enabled;
-}
-
-/* ---------------- SIMULATION (optional) ---------------- */
-
-function doFullSim() {
-  while (!isFinished()) {
-    const choice = chooseBestUpgrade();
-    if (choice.type === "none") break;
-    applyAttempt(choice.type, choice.index, null); // internal RNG
-  }
-}
-
-/* ---------------- UI: CONFIG ---------------- */
-
-function populateSelect(selectEl, list) {
-  selectEl.innerHTML = "";
-  list.forEach(v => {
-    const opt = document.createElement("option");
-    opt.value = v;
-    opt.textContent = v;
-    selectEl.appendChild(opt);
-  });
-}
-
-function refreshAffixOptionsUnique() {
-  // simple uniqueness enforcement: disable already-selected values in other dropdowns
-  const s1 = document.getElementById("affix1");
-  const s2 = document.getElementById("affix2");
-  const s3 = document.getElementById("affix3");
-
-  const chosen = new Set([s1.value, s2.value, s3.value]);
-
-  [s1, s2, s3].forEach(sel => {
-    Array.from(sel.options).forEach(opt => {
-      // disable if it's chosen elsewhere (not current select's own value)
-      opt.disabled = (chosen.has(opt.value) && opt.value !== sel.value);
-    });
-  });
-}
-
-function applyConfigAndReset() {
-  const config = {
-    affix1: document.getElementById("affix1").value,
-    affix2: document.getElementById("affix2").value,
-    affix3: document.getElementById("affix3").value,
-    low1: document.getElementById("low1").checked,
-    low2: document.getElementById("low2").checked,
-    low3: document.getElementById("low3").checked,
-    curse: document.getElementById("curseSelect").value
+  self.onerror = function(err) {
+    self.postMessage({type:'error', msg: String(err.message||err)});
   };
 
-  state = createSoulstoneStateFromConfig(config);
-  pendingRecommendation = null;
-  setAdvisorButtons(false);
-  setAdvisorText("Grab a recommendation, do it in-game, then record success/fail here.");
-  render();
+  self.onmessage = function(e) {
+    const msg=e.data;
+    if(msg.type==='solve') {
+      try { solve(); }
+      catch(err) { self.postMessage({type:'error', msg:String(err.message||err)}); }
+    } else if(msg.type==='lookup') {
+      if(!_V){self.postMessage({type:'lookup_result',reqId:msg.reqId,action:-1,winProb:0});return}
+      const idx=msg.ci*_s1+msg.vi*_s2+msg.ji*_s3+msg.ai*_s4+msg.cs;
+      self.postMessage({type:'lookup_result',reqId:msg.reqId,action:_P[idx],winProb:_V[idx]});
+    }
+  };
 }
 
-function getRecommendationOnly() {
-  if (!state) return;
+// ═══════════════════════════════════════════════════════════════════════
+// WORKER SETUP
+// ═══════════════════════════════════════════════════════════════════════
+const blob = new Blob([`(${workerMain.toString()})()`], {type:'application/javascript'});
+const worker = new Worker(URL.createObjectURL(blob));
 
-  if (isFinished()) {
-    pendingRecommendation = null;
-    setAdvisorButtons(false);
-    setAdvisorText("All 40 slots are used. Reset to start again.");
-    return;
+let solverReady = false;
+let vIdxMap=null, jIdxMap=null, aIdxMap=null, cIdxMap=null;
+let NV,NJ,NA,NC,_s1,_s2,_s3,_s4;
+let pendingReqId = 0;
+let activeReqId  = 0;
+const reqCallbacks = new Map();
+
+worker.onmessage = function(e) {
+  const msg = e.data;
+  if(msg.type==='progress') {
+    document.getElementById('prog-bar').style.width = msg.pct+'%';
+    document.getElementById('prog-pct').textContent =
+      msg.pct+'%  '+msg.elapsed+'s  ('+Math.round(msg.states/1000)+'K states)';
+  } else if(msg.type==='error') {
+    document.getElementById('sdot').className='sdot dot-r';
+    document.getElementById('stext').textContent='Solver error: '+msg.msg;
+    document.getElementById('prog-bar').parentElement.style.display='none';
+  } else if(msg.type==='done') {
+    solverReady = true;
+    vIdxMap=msg.vIdxMap; jIdxMap=msg.jIdxMap;
+    aIdxMap=msg.aIdxMap; cIdxMap=msg.cIdxMap;
+    NV=msg.NV; NJ=msg.NJ; NA=msg.NA; NC=msg.NC;
+    _s1=msg.s1; _s2=msg.s2; _s3=msg.s3; _s4=msg.s4;
+
+    document.getElementById('prog-bar').style.width='100%';
+    document.getElementById('prog-pct').textContent='';
+    document.getElementById('sdot').className='sdot dot-g';
+    document.getElementById('stext').textContent =
+      `Ready — starting win probability: ${(msg.startProb*100).toFixed(2)}%  (solved in ${msg.elapsed}s)`;
+    document.getElementById('prog-bar').parentElement.style.display='none';
+
+    // Enable screen capture analyze button if stream active
+    if(videoStream) {
+      document.getElementById('btn-snap').disabled = false;
+      document.getElementById('btn-auto').disabled = false;
+    }
+    triggerManualLookup();
+  } else if(msg.type==='lookup_result') {
+    const cb = reqCallbacks.get(msg.reqId);
+    reqCallbacks.delete(msg.reqId);
+    if(cb) cb(msg.action, msg.winProb);
   }
+};
 
-  const choice = chooseBestUpgrade();
-  pendingRecommendation = choice;
-
-  if (!choice || choice.type === "none") {
-    setAdvisorButtons(false);
-    setAdvisorText("No moves left.");
-    return;
-  }
-
-  setAdvisorButtons(true);
-
-  if (choice.type === "curse") {
-    setAdvisorText(`Recommendation: CURSE — ${choice.why}`);
-  } else {
-    const a = state.affixes[choice.index];
-    setAdvisorText(`Recommendation: ${a.name.toUpperCase()} (slot ${choice.index + 1}) — ${choice.why}`);
-  }
+function workerLookup(ci,vi,ji,ai,cs,cb) {
+  const id = ++pendingReqId;
+  reqCallbacks.set(id, cb);
+  worker.postMessage({type:'lookup', reqId:id, ci,vi,ji,ai,cs});
 }
 
-function recordOutcome(success) {
-  if (!state) return;
-  if (!pendingRecommendation || pendingRecommendation.type === "none") return;
+worker.postMessage({type:'solve'});
 
-  const move = pendingRecommendation;
-
-  // consume 1 slot and update chance, using forcedOutcome
-  applyAttempt(move.type, move.index ?? null, success);
-
-  pendingRecommendation = null;
-  setAdvisorButtons(false);
-
-  if (!isFinished()) {
-    setAdvisorText("Logged. Grab another recommendation, do it in-game, then record success/fail here.");
-  } else {
-    setAdvisorText("Done — all 40 slots are used. Reset to start again.");
-  }
-}
-
-
-function resetStone() {
-  applyConfigAndReset();
-}
-
-/* ---------------- UI: RENDER ---------------- */
-
-function gemHTML(attempts) {
-  let html = "";
-  for (let i = 0; i < 10; i++) {
-    if (i < attempts.length) html += `<span class="gem ${attempts[i] ? "success" : "fail"}"></span>`;
-    else html += `<span class="gem"></span>`;
-  }
-  return html;
-}
-
-function render() {
-  document.getElementById("chance").textContent = state.chance + "%";
-  document.getElementById("slotsUsed").textContent = `${totalSlotsUsed()} / 40`;
-  document.getElementById("pointsGained").textContent = `${totalPointsGained()}`;
-
-  const affixesDiv = document.getElementById("affixes");
-  affixesDiv.innerHTML = "";
-
-  state.affixes.forEach((a, i) => {
-    const slots = trackSlotsUsed(a);
-    const pts = trackPoints(a);
-    const disabled = (slots >= 10 || isFinished()) ? "disabled" : "";
-
-    affixesDiv.innerHTML += `
-      <div class="track">
-        <div class="track-top">
-          <div>
-            <strong>${a.name}</strong>
-            <span class="meta"> — Points: ${pts} | Slots: ${slots}/10 | Priority: ${a.priority}</span>
-          </div>
-          <div>
-            <button ${disabled} onclick="applyAttempt('affix', ${i}, null)">Manual Enchant</button>
-          </div>
-        </div>
-        <div class="gems">${gemHTML(a.attempts)}</div>
-      </div>
-    `;
+// ═══════════════════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════════════════
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab==='screen' && !tesseractLoaded) loadTesseract();
   });
+});
 
-  const curseDiv = document.getElementById("curse");
-  const cSlots = trackSlotsUsed(state.curse);
-  const cPts = trackPoints(state.curse);
-  const cDisabled = (cSlots >= 10 || isFinished()) ? "disabled" : "";
+// ═══════════════════════════════════════════════════════════════════════
+// MANUAL TAB — BUILD UI
+// ═══════════════════════════════════════════════════════════════════════
+const statState = [
+  {att:0,suc:0,history:[]},
+  {att:0,suc:0,history:[]},
+  {att:0,suc:0,history:[]},
+  {att:0,suc:0,history:[]},
+];
 
-  curseDiv.innerHTML = `
-    <div class="track">
-      <div class="track-top">
-        <div>
-          <strong>${state.curse.name}</strong>
-          <span class="meta"> — Points: ${cPts} | Slots: ${cSlots}/10</span>
+function buildDiamonds(container, isCurse, att, suc, history) {
+  container.innerHTML='';
+  for(let i=0;i<MAX_ATT;i++) {
+    const d=document.createElement('div');
+    if(history && i<history.length) {
+      const won=history[i];
+      d.className='dia '+(won ? (isCurse?'dia-curse-on':'dia-affix-on') : (isCurse?'dia-curse-off dia-used':'dia-affix-off dia-used'));
+      d.title=won?'Success':'Fail';
+    } else {
+      d.className='dia '+(isCurse?'dia-curse-off':'dia-affix-off');
+      d.title='Unused';
+      d.style.opacity='0.35';
+    }
+    container.appendChild(d);
+  }
+}
+
+const statRowsEl = document.getElementById('stat-rows');
+STAT_NAMES.forEach((name, si) => {
+  const card = document.createElement('div');
+  card.className='stat-card';
+  card.innerHTML=`
+    <div class="stat-head">
+      <span class="stat-name-label ${STAT_CURSE[si]?'curse-color':'affix-color'}">${name}</span>
+      <span class="stat-goal-label">${STAT_GOALS[si]}</span>
+    </div>
+    <div class="stat-inputs">
+      <div class="stat-counters">
+        <div class="counter-group">
+          <span class="counter-label">Successes</span>
+          <span class="counter-val" id="suc-val-${si}">0</span>
         </div>
-        <div>
-          <button class="bad" ${cDisabled} onclick="applyAttempt('curse', null, null)">Manual Enchant Curse</button>
+        <div class="counter-group">
+          <span class="counter-label">Attempts</span>
+          <span class="counter-val" id="att-val-${si}">0</span>
         </div>
       </div>
-      <div class="gems">${gemHTML(state.curse.attempts)}</div>
+      <div class="record-btns">
+        <button class="btn-success" id="btn-suc-${si}">Record Success</button>
+        <button class="btn-failure" id="btn-fail-${si}">Record Failure</button>
+      </div>
     </div>
+    <div class="diamonds" id="dia-${si}"></div>
   `;
+  statRowsEl.appendChild(card);
 
-  const logDiv = document.getElementById("log");
-  logDiv.innerHTML = state.log.map(l => {
-    const cls = l.success ? "successTxt" : "failTxt";
-    const tag = l.success ? "SUCCESS" : "FAIL";
-    return `<div class="${cls}">
-      [${l.chanceBefore}%→${l.chanceAfter}%] ${l.track} ${tag} | slot ${l.slot}/10 |
-    </div>`;
-  }).join("");
+  const attValEl = document.getElementById(`att-val-${si}`);
+  const sucValEl = document.getElementById(`suc-val-${si}`);
+  const diaEl = document.getElementById(`dia-${si}`);
+
+  function update() {
+    const {att, suc, history} = statState[si];
+    attValEl.textContent = att;
+    sucValEl.textContent = suc;
+    buildDiamonds(diaEl, STAT_CURSE[si], att, suc, history);
+    triggerManualLookup();
+  }
+
+  document.getElementById(`btn-suc-${si}`).addEventListener('click', () => {
+    if(statState[si].att >= 10) return;
+    statState[si].history.push(true);
+    statState[si].att++;
+    statState[si].suc++;
+    currentCI = CI_WIN[currentCI];
+    document.getElementById('ci-display').textContent = CHANCE_LIST[currentCI] + '%';
+    update();
+  });
+  document.getElementById(`btn-fail-${si}`).addEventListener('click', () => {
+    if(statState[si].att >= 10) return;
+    statState[si].history.push(false);
+    statState[si].att++;
+    currentCI = CI_LOSE[currentCI];
+    document.getElementById('ci-display').textContent = CHANCE_LIST[currentCI] + '%';
+    update();
+  });
+  buildDiamonds(diaEl, STAT_CURSE[si], 0, 0, []);
+});
+
+let currentCI = 5;
+
+document.getElementById('global-reset-btn').addEventListener('click', () => {
+  statState.forEach((s, si) => {
+    s.att = 0; s.suc = 0; s.history = [];
+    const diaEl = document.getElementById(`dia-${si}`);
+    const attValEl = document.getElementById(`att-val-${si}`);
+    const sucValEl = document.getElementById(`suc-val-${si}`);
+    attValEl.textContent = 0;
+    sucValEl.textContent = 0;
+    buildDiamonds(diaEl, STAT_CURSE[si], 0, 0, []);
+  });
+  currentCI = 5;
+  document.getElementById('ci-display').textContent = '75%';
+  document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('highlighted'));
+  triggerManualLookup();
+});
+
+let manualLookupTimeout = null;
+function triggerManualLookup() {
+  if(!solverReady) return;
+  clearTimeout(manualLookupTimeout);
+  manualLookupTimeout = setTimeout(doManualLookup, 50);
 }
 
-/* ---------------- INIT ---------------- */
-
-function initConfigUI() {
-  const s1 = document.getElementById("affix1");
-  const s2 = document.getElementById("affix2");
-  const s3 = document.getElementById("affix3");
-  const cs = document.getElementById("curseSelect");
-
-  populateSelect(s1, AFFIX_LIST);
-  populateSelect(s2, AFFIX_LIST);
-  populateSelect(s3, AFFIX_LIST);
-  populateSelect(cs, CURSE_LIST);
-
-  // sensible defaults
-  s1.value = "adrenaline";
-  s2.value = "preemptive strike";
-  s3.value = "heavy armor";
-  cs.value = "power";
-  document.getElementById("low3").checked = true;
-
-  // enforce uniqueness live
-  [s1, s2, s3].forEach(sel => sel.addEventListener("change", refreshAffixOptionsUnique));
-  refreshAffixOptionsUnique();
-
-  applyConfigAndReset();
+function getStateIndices() {
+  const results = [];
+  for(let si=0; si<4; si++) {
+    const {att,suc} = statState[si];
+    const map = [vIdxMap,jIdxMap,aIdxMap,cIdxMap][si];
+    const idx = map[att*100+suc];
+    results.push(idx);
+  }
+  return results;
 }
 
-initConfigUI();
+function doManualLookup() {
+  const ci = currentCI;
+  const [vi,ji,ai,cs] = getStateIndices();
+  if(vi===-1||vi===undefined||ji===-1||ai===-1||cs===-1) {
+    setManualResult(null,-1,0);
+    return;
+  }
+  const myId = ++activeReqId;
+  workerLookup(ci,vi,ji,ai,cs, (action,winProb) => {
+    if(myId !== activeReqId) return; // stale
+    setManualResult(null, action, winProb);
+  });
+}
+
+function isAlreadyWon() {
+  const affix = [statState[0].suc, statState[1].suc, statState[2].suc].sort((a,b)=>b-a);
+  return affix[0]>=9 && affix[1]>=6 && affix[2]>=3 && statState[3].suc<=4;
+}
+
+function setManualResult(hint, action, winProb) {
+  const box    = document.getElementById('m-result');
+  const actEl  = document.getElementById('m-action');
+  const probEl = document.getElementById('m-prob');
+  const wrap   = document.getElementById('m-wbar-wrap');
+  const bar    = document.getElementById('m-wbar');
+
+  if(isAlreadyWon()) {
+    box.className='result-box won';
+    actEl.textContent='9/6/3 Achieved';
+    probEl.textContent='All goals met. Enchanting successful.';
+    wrap.style.display='none';
+    document.querySelectorAll('.stat-card').forEach(c=>c.classList.remove('highlighted'));
+    return;
+  }
+
+  if(action===-1) {
+    box.className='result-box dead';
+    actEl.textContent='9/6/3 Unachievable';
+    probEl.textContent='9/6/3 + curse ≤4 is no longer achievable from this position.';
+    wrap.style.display='none';
+    return;
+  }
+  if(winProb===0) {
+    box.className='result-box dead';
+    actEl.textContent='Cannot win from here';
+    probEl.textContent='9/6/3 + curse ≤4 is no longer achievable from this position.';
+    wrap.style.display='none';
+    return;
+  }
+  const pct = (winProb*100).toFixed(2);
+  box.className = winProb > 0.3 ? 'result-box' : 'result-box warn';
+  actEl.textContent = `→ Enchant ${STAT_NAMES[action]}`;
+  probEl.textContent = `Win probability: ${pct}%`;
+  wrap.style.display='block';
+  bar.style.width = Math.min(winProb*100,100)+'%';
+
+  // Highlight the recommended stat card
+  document.querySelectorAll('.stat-card').forEach((c,i) => {
+    c.classList.toggle('highlighted', i===action);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SCREEN CAPTURE TAB
+// ═══════════════════════════════════════════════════════════════════════
+let videoStream    = null;
+let videoEl        = null;
+let calibRegion    = null;   // {x,y,w,h} in canvas coords
+let calibrating    = false;
+let calibCorner1   = null;
+let autoInterval   = null;
+let tesseractLoaded= false;
+let tesseractReady = false;
+
+const capCanvas = document.getElementById('cap-canvas');
+const capCtx    = capCanvas.getContext('2d');
+
+// Load Tesseract.js lazily
+function loadTesseract() {
+  if(tesseractLoaded) return;
+  tesseractLoaded = true;
+  const s = document.createElement('script');
+  s.src = 'https://unpkg.com/tesseract.js@4/dist/tesseract.min.js';
+  s.onload = () => { tesseractReady = true; };
+  document.head.appendChild(s);
+}
+
+document.getElementById('btn-cap').addEventListener('click', async () => {
+  try {
+    videoStream = await navigator.mediaDevices.getDisplayMedia({video:true, audio:false});
+    videoEl = document.createElement('video');
+    videoEl.srcObject = videoStream;
+    await videoEl.play();
+    document.getElementById('canvas-wrap').style.display='inline-block';
+    document.getElementById('s-result').style.display='flex';
+    document.getElementById('btn-cal').disabled = false;
+    if(solverReady) {
+      document.getElementById('btn-snap').disabled = false;
+      document.getElementById('btn-auto').disabled = false;
+    }
+    document.getElementById('cap-hint').textContent='Stream active. Calibrate the enchanting panel region, then Analyze Frame.';
+    capCanvas.width  = videoEl.videoWidth  || 800;
+    capCanvas.height = videoEl.videoHeight || 600;
+    drawFrame();
+  } catch(err) {
+    document.getElementById('cap-hint').textContent = 'Screen capture cancelled or not supported: '+err.message;
+  }
+});
+
+function drawFrame() {
+  if(!videoEl||!videoStream.active) return;
+  capCanvas.width  = videoEl.videoWidth;
+  capCanvas.height = videoEl.videoHeight;
+  capCtx.drawImage(videoEl, 0, 0);
+  drawRegionOverlay();
+}
+
+function drawRegionOverlay() {
+  if(!calibRegion) return;
+  const r = calibRegion;
+  const rect = document.getElementById('reg-rect');
+  rect.style.display='block';
+  rect.style.left   = r.x+'px';
+  rect.style.top    = r.y+'px';
+  rect.style.width  = r.w+'px';
+  rect.style.height = r.h+'px';
+}
+
+// Calibration
+document.getElementById('btn-cal').addEventListener('click', () => {
+  calibrating   = true;
+  calibCorner1  = null;
+  document.getElementById('cap-hint').textContent = 'Click the TOP-LEFT corner of the enchanting panel.';
+  drawFrame();
+});
+
+capCanvas.addEventListener('click', (e) => {
+  if(!calibrating) return;
+  const rect = capCanvas.getBoundingClientRect();
+  const scaleX = capCanvas.width  / rect.width;
+  const scaleY = capCanvas.height / rect.height;
+  const x = Math.round((e.clientX - rect.left) * scaleX);
+  const y = Math.round((e.clientY - rect.top)  * scaleY);
+  if(!calibCorner1) {
+    calibCorner1 = {x,y};
+    document.getElementById('cap-hint').textContent = 'Now click the BOTTOM-RIGHT corner.';
+  } else {
+    calibRegion = {
+      x: Math.min(calibCorner1.x, x),
+      y: Math.min(calibCorner1.y, y),
+      w: Math.abs(x - calibCorner1.x),
+      h: Math.abs(y - calibCorner1.y)
+    };
+    calibrating = false;
+    drawFrame();
+    document.getElementById('cap-hint').textContent =
+      `Region set: ${calibRegion.w}×${calibRegion.h} at (${calibRegion.x},${calibRegion.y}). Ready to analyze.`;
+  }
+});
+
+document.getElementById('btn-auto').addEventListener('click', function() {
+  if(autoInterval) {
+    clearInterval(autoInterval);
+    autoInterval = null;
+    this.textContent = 'Auto (1 s)';
+    document.getElementById('live-badge').style.display='none';
+  } else {
+    autoInterval = setInterval(() => { drawFrame(); analyzeFrame(); }, 1200);
+    this.textContent = '■ Stop Auto';
+    document.getElementById('live-badge').style.display='inline-block';
+  }
+});
+
+function updateOcrDisplay(state) {
+  document.getElementById('ocr-chance').textContent = state.ci!=null ? CHANCE_LIST[state.ci]+'%' : '?';
+  const labels=['ocr-v','ocr-j','ocr-a','ocr-c'];
+  state.stats.forEach((s,i) => {
+    document.getElementById(labels[i]).textContent = s ? `${s[1]}/${s[0]}` : '?';
+  });
+}
+
+function setScreenResult(action, winProb) {
+  const box   = document.getElementById('s-result');
+  const actEl = document.getElementById('s-action');
+  const prob  = document.getElementById('s-prob');
+  const wrap  = document.getElementById('s-wbar-wrap');
+  const bar   = document.getElementById('s-wbar');
+  box.style.display='flex';
+  if(action===-1||winProb===0) {
+    box.className='result-box dead';
+    actEl.textContent='Cannot win from here';
+    prob.textContent='9/6/3 + curse ≤4 is no longer achievable from this position.';
+    wrap.style.display='none';
+    return;
+  }
+  box.className = winProb>0.3 ? 'result-box' : 'result-box warn';
+  actEl.textContent = `→ Enchant ${STAT_NAMES[action]}`;
+  prob.textContent  = `Win probability: ${(winProb*100).toFixed(2)}%`;
+  wrap.style.display='block';
+  bar.style.width=Math.min(winProb*100,100)+'%';
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PANEL PARSING (pixel analysis + OCR)
+// ═══════════════════════════════════════════════════════════════════════
+function rgbToHsv(r,g,b) {
+  r/=255; g/=255; b/=255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
+  let h=0, s=max===0?0:d/max, v=max;
+  if(d>0) {
+    if(max===r) h=((g-b)/d+(g<b?6:0))/6;
+    else if(max===g) h=((b-r)/d+2)/6;
+    else h=((r-g)/d+4)/6;
+  }
+  return [h*360, s, v];
+}
+
+function countDiamonds(data, width, height, isCurse) {
+  const mask = new Uint8Array(width*height);
+  for(let i=0;i<data.length;i+=4) {
+    const [h,s,v] = rgbToHsv(data[i],data[i+1],data[i+2]);
+    mask[i/4] = isCurse
+      ? (h>=250&&h<=345&&s>=0.07&&v>=0.25?1:0)
+      : (h>=185&&h<=245&&s>=0.18&&v>=0.40?1:0);
+  }
+  // Small dilation (radius 2)
+  const dil = new Uint8Array(width*height);
+  const dk=2;
+  for(let y=0;y<height;y++) {
+    for(let x=0;x<width;x++) {
+      let found=false;
+      outer:for(let dy=-dk;dy<=dk;dy++) {
+        for(let dx=-dk;dx<=dk;dx++) {
+          const ny=y+dy,nx=x+dx;
+          if(ny>=0&&ny<height&&nx>=0&&nx<width&&mask[ny*width+nx]) {found=true;break outer}
+        }
+      }
+      dil[y*width+x]=found?1:0;
+    }
+  }
+  // BFS connected components
+  const vis = new Uint8Array(width*height);
+  const blobs=[];
+  for(let y=0;y<height;y++) {
+    for(let x=0;x<width;x++) {
+      const idx=y*width+x;
+      if(!dil[idx]||vis[idx]) continue;
+      const q=[idx]; vis[idx]=1;
+      let area=0,xMin=x,xMax=x,qi=0;
+      while(qi<q.length) {
+        const cur=q[qi++];
+        const cy=Math.floor(cur/width),cx=cur%width;
+        area++;
+        if(cx<xMin) xMin=cx;
+        if(cx>xMax) xMax=cx;
+        const neighbors=[cur-width,cur+width,cur-1,cur+1];
+        for(const ni of neighbors) {
+          if(ni<0||ni>=width*height) continue;
+          const ny=Math.floor(ni/width),nx=ni%width;
+          if(Math.floor(cur/width)!==ny && cx!==nx) continue; // 4-connectivity check
+          if(!dil[ni]||vis[ni]) continue;
+          vis[ni]=1; q.push(ni);
+        }
+      }
+      const bw=xMax-xMin;
+      if(area>=(isCurse?8:20)&&area<5000&&bw>4&&bw<130) blobs.push({x:xMin,area});
+    }
+  }
+  blobs.sort((a,b)=>a.x-b.x);
+  const merged=[];
+  for(const {x,area} of blobs) {
+    if(merged.length&&x-merged[merged.length-1].x<18) {
+      if(area>merged[merged.length-1].area) merged[merged.length-1]={x,area};
+    } else merged.push({x,area});
+  }
+  return Math.min(merged.length, MAX_ATT);
+}
+
+// Extract sub-region imageData from a full panel imageData
+function subRegion(data, fullW, x, y, w, h) {
+  const out = new Uint8ClampedArray(w*h*4);
+  for(let row=0;row<h;row++) {
+    const srcOff=((y+row)*fullW+x)*4;
+    const dstOff=row*w*4;
+    out.set(data.slice(srcOff, srcOff+w*4), dstOff);
+  }
+  return out;
+}
+
+// OCR one sub-region, return text
+async function ocrRegion(data, w, h) {
+  if(!tesseractReady) return '';
+  const oc = document.createElement('canvas');
+  oc.width=w*2; oc.height=h*2;
+  const octx = oc.getContext('2d');
+  const id2 = new ImageData(data, w, h);
+  const tmp = document.createElement('canvas');
+  tmp.width=w; tmp.height=h;
+  tmp.getContext('2d').putImageData(id2,0,0);
+  octx.imageSmoothingEnabled=false;
+  octx.drawImage(tmp,0,0,w*2,h*2);
+  // Grayscale + invert for OCR
+  const octxId = octx.getImageData(0,0,w*2,h*2);
+  const d=octxId.data;
+  for(let i=0;i<d.length;i+=4) {
+    const g=Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2]);
+    d[i]=d[i+1]=d[i+2]=255-g; // invert for dark-on-bright text
+    d[i+3]=255;
+  }
+  octx.putImageData(octxId,0,0);
+  try {
+    const {data:{text}} = await Tesseract.recognize(oc,'eng',{logger:()=>{}});
+    return text;
+  } catch(e) { return ''; }
+}
+
+function parseChanceFromText(text) {
+  const m = text.match(/(\d+)\s*%/);
+  if(!m) return null;
+  const val=parseInt(m[1]);
+  let best=-1, bestDist=999;
+  CHANCE_LIST.forEach((c,i)=>{
+    const d=Math.abs(c-val);
+    if(d<bestDist){bestDist=d;best=i}
+  });
+  return bestDist<=7?best:null;
+}
+
+function parseSuccessFromText(text) {
+  const m=text.match(/\+\s*(\d+)(?!\s*%)/);
+  return m?parseInt(m[1]):null;
+}
+
+// Main panel parse
+async function parsePanel(imageData, w, h) {
+  const d=imageData.data;
+  // Chance: top 20%
+  const hdrH=Math.max(1,Math.round(h*0.20));
+  const hdrData=subRegion(d, w, 0,0,w,hdrH);
+  const chanceText=await ocrRegion(hdrData,w,hdrH);
+  const ci=parseChanceFromText(chanceText);
+
+  // 4 stat rows: equal quarters
+  const rowH=Math.floor(h/4);
+  const stats=[];
+  for(let si=0;si<4;si++) {
+    const y0=si*rowH, y1=si<3?y0+rowH:h;
+    const rh=y1-y0;
+    const rowData=subRegion(d, w, 0,y0,w,rh);
+    const isCurse=si===3;
+
+    // Diamond region: bottom 45%, left 72%
+    const diaTop=Math.round(rh*0.55), diaW=Math.round(w*0.72);
+    const diaData=subRegion(rowData, w, 0,diaTop,diaW,rh-diaTop);
+    const att=countDiamonds(diaData,diaW,rh-diaTop,isCurse);
+
+    // Text region: top 55%, skip left icon (8%)
+    const txtTop=0, txtLeft=Math.round(w*0.08), txtW=Math.round(w*0.5);
+    const txtData=subRegion(rowData, w, txtLeft,txtTop,txtW,Math.round(rh*0.55));
+    const txt=await ocrRegion(txtData,txtW,Math.round(rh*0.55));
+    let suc=parseSuccessFromText(txt);
+    if(suc==null){stats.push(null);continue}
+    suc=Math.max(0,Math.min(suc,att));
+    stats.push([att,suc]);
+  }
+  return {ci, stats};
+}
+
+async function analyzeFrame() {
+  if(!calibRegion){document.getElementById('cap-hint').textContent='Please calibrate the region first.';return}
+  const r=calibRegion;
+  const imageData=capCtx.getImageData(r.x,r.y,r.w,r.h);
+  document.getElementById('ocr-state').style.display='grid';
+  document.getElementById('ocr-status').textContent='Analyzing…';
+
+  const state=await parsePanel(imageData,r.w,r.h);
+  updateOcrDisplay(state);
+
+  if(!solverReady||state.ci==null||state.stats.some(s=>s==null)){
+    document.getElementById('ocr-status').textContent='Incomplete state — check region or calibration';
+    return;
+  }
+
+  const maps=[vIdxMap,jIdxMap,aIdxMap,cIdxMap];
+  const idxs=state.stats.map((s,i)=>maps[i][s[0]*100+s[1]]);
+  if(idxs.some(v=>v==null||v===-1)){
+    document.getElementById('ocr-status').textContent='State out of valid range';
+    return;
+  }
+  document.getElementById('ocr-status').textContent='OK';
+  const myId=++activeReqId;
+  workerLookup(state.ci,idxs[0],idxs[1],idxs[2],idxs[3],(action,winProb)=>{
+    if(myId!==activeReqId)return;
+    setScreenResult(action,winProb);
+  });
+}
+
+document.getElementById('btn-snap').addEventListener('click',()=>{drawFrame();analyzeFrame()});
 </script>
-
 </body>
 </html>
