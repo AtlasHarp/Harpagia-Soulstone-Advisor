@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <title>Soulstone Enchanting Advisor</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{
-  background: radial-gradient(1200px 700px at 20% 0%, rgba(50,180,160,.06), transparent 60%),
-              radial-gradient(900px 600px at 90% 10%, rgba(242,200,107,.07), transparent 55%),
+  background: radial-gradient(1200px 700px at 20% 0%, rgba(50,180,160,.04), transparent 60%),
+              radial-gradient(900px 600px at 90% 10%, rgba(220,60,60,.05), transparent 55%),
               #09090d;
-  color:#dff0ec;
+  color:#f0ece4;
   font-family:'Manrope','Segoe UI','Helvetica Neue',Arial,sans-serif;
   font-size:14px;
   min-height:100vh;
@@ -37,7 +37,7 @@ header h1{
   letter-spacing:0.04em;
   white-space:nowrap;
 }
-#solver-status{font-size:12px;color:#6a9890;display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap}
+#solver-status{font-size:12px;color:#aaa090;display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap}
 .sdot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
 .dot-y{background:#f2c86b}.dot-g{background:#7ecfa0}.dot-r{background:#e06a6a}
 .prog-wrap{background:rgba(70,180,160,0.12);border-radius:4px;height:3px;width:140px;overflow:hidden;display:inline-block;vertical-align:middle}
@@ -70,16 +70,16 @@ header h1{
 /* ── Chance row ── */
 .chance-row{
   display:flex;align-items:center;justify-content:space-between;gap:14px;
-  margin-bottom:16px;padding:14px 20px;
-  background:rgba(8,22,20,0.72);
+  margin-bottom:16px;padding:10px 20px;
+  background:rgba(8,22,20,0.50);
   border:1px solid rgba(70,180,160,0.14);
   border-left:3px solid rgba(242,200,107,0.4);
   border-radius:16px;
   box-shadow:0 2px 12px rgba(0,0,0,0.25);
 }
 .chance-row-labels{display:flex;flex-direction:column;gap:3px}
-.chance-row label{color:#80c4be;white-space:nowrap;font-weight:500;font-size:14px}
-.chance-hint{font-size:11px;color:#3a6a64}
+.chance-row label{color:#d4c9a8;white-space:nowrap;font-weight:500;font-size:14px}
+.chance-hint{font-size:11px;color:#8a8078}
 .ci-display{
   background:rgba(4,16,14,0.8);
   border:1px solid rgba(242,200,107,0.28);
@@ -92,11 +92,11 @@ header h1{
 
 /* ── Stat cards ── */
 .stat-card{
-  background:rgba(8,22,20,0.72);
+  background:rgba(8,22,20,0.50);
   border:1px solid rgba(70,180,160,0.14);
   border-left:3px solid rgba(242,200,107,0.35);
   border-radius:18px;
-  padding:14px 18px;
+  padding:10px 18px;
   margin-bottom:12px;
   box-shadow:0 4px 20px rgba(0,0,0,0.28),0 0 8px rgba(50,180,160,0.06);
   transition:border-left-color 0.25s,box-shadow 0.25s;
@@ -109,7 +109,7 @@ header h1{
 .stat-name-label{font-family:'Cinzel',serif;font-weight:500;font-size:14px;letter-spacing:0.03em}
 .affix-color{color:#7ecfd4}
 .curse-color{color:#f5a9c9}
-.stat-goal-label{font-size:11px;color:#3a6a64;letter-spacing:0.02em}
+.stat-goal-label{font-size:11px;color:#8a8078;letter-spacing:0.02em}
 
 .stat-inputs{display:flex;flex-direction:column;gap:10px}
 .record-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -124,11 +124,11 @@ header h1{
 .btn-success:active,.btn-failure:active{transform:scale(0.96)}
 .stat-counters{display:flex;align-items:center;justify-content:space-between}
 .counter-group{display:flex;flex-direction:column;align-items:center;gap:2px}
-.counter-label{font-size:10px;color:#4a7a74;text-transform:uppercase;letter-spacing:.6px}
+.counter-label{font-size:10px;color:#8a8078;text-transform:uppercase;letter-spacing:.6px}
 .counter-val{font-size:22px;font-weight:600;color:#f2c86b;line-height:1}
 .btn-reset{
   background:none;border:1px solid rgba(70,180,160,0.15);border-radius:6px;
-  color:#3a6a64;font-size:10px;cursor:pointer;padding:3px 8px;letter-spacing:0.04em;
+  color:#8a8078;font-size:10px;cursor:pointer;padding:3px 8px;letter-spacing:0.04em;
   transition:color 0.15s,border-color 0.15s;
 }
 .btn-reset:hover{color:#7ecfd4;border-color:rgba(70,180,160,0.4)}
@@ -143,11 +143,11 @@ header h1{
 
 /* ── Result box ── */
 .result-box{
-  background:rgba(8,22,20,0.72);
+  background:rgba(8,22,20,0.50);
   border:1px solid rgba(70,180,160,0.14);
   border-left:3px solid rgba(126,207,160,0.5);
   border-radius:18px;
-  padding:20px 18px;
+  padding:16px 18px;
   margin-top:18px;
   text-align:center;
   min-height:100px;
@@ -175,7 +175,7 @@ header h1{
 .result-action{font-family:'Cinzel',serif;font-size:20px;font-weight:500;color:#f2c86b;letter-spacing:0.03em}
 .result-box.warn .result-action{color:#f2a96b}
 .result-box.dead .result-action{color:#e06a6a}
-.result-prob{font-size:13px;color:#6a9890;line-height:1.5}
+.result-prob{font-size:13px;color:#aaa090;line-height:1.5}
 .winbar-wrap{width:100%;background:rgba(70,180,160,0.10);border-radius:4px;height:6px;overflow:hidden;margin-top:2px}
 .winbar{height:100%;background:linear-gradient(90deg,rgba(220,90,90,0.9),#f2c86b,#7ecfa0);border-radius:4px;transition:width 0.4s;width:0%}
 
@@ -199,12 +199,12 @@ header h1{
 #canvas-wrap{position:relative;display:inline-block;max-width:100%;margin-top:8px}
 #cap-canvas{display:block;max-width:100%;border:1px solid rgba(70,180,160,0.14);border-radius:12px;cursor:crosshair}
 .region-rect{position:absolute;border:2px solid #f2c86b;pointer-events:none;box-shadow:0 0 0 9999px rgba(0,0,0,.4)}
-.hint{font-size:12px;color:#3a6a64;margin-top:8px;line-height:1.7}
-.hint strong{color:#80c4be}
+.hint{font-size:12px;color:#8a8078;margin-top:8px;line-height:1.7}
+.hint strong{color:#d4c9a8}
 .badge{background:rgba(126,207,160,0.1);border:1px solid rgba(126,207,160,0.3);border-radius:10px;color:#7ecfa0;font-size:11px;padding:3px 10px}
 
 /* ── OCR state ── */
-.ocr-state{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;font-size:12px;color:#6a9890}
+.ocr-state{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;font-size:12px;color:#aaa090}
 .ocr-cell{
   background:rgba(8,22,20,0.6);
   border:1px solid rgba(70,180,160,0.10);
@@ -213,51 +213,78 @@ header h1{
 .ocr-cell strong{color:#f2c86b}
 @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
 @keyframes fadeUp   { from{opacity:0;transform:translateY(12px)}  to{opacity:1;transform:translateY(0)} }
+/* ── Two-col layout ── */
+#tab-manual { max-width:none !important; padding:0 !important; }
+.tool-layout { max-width:980px;margin:0 auto;padding:24px 28px;display:flex;gap:24px;align-items:flex-start; }
+.main-col { flex:1;min-width:0; }
+.side-panel { width:224px;flex-shrink:0;display:flex;flex-direction:column;gap:12px;position:sticky;top:20px; }
+.side-card { background:rgba(8,22,20,0.50);border:1px solid rgba(70,180,160,0.14);border-radius:14px;padding:12px 14px; }
+.side-card-label { font-size:10px;color:#8a8078;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px; }
+.side-panel #solver-status { font-size:12px;color:#aaa090;display:flex;flex-direction:column;gap:6px;flex:unset; }
+.side-panel .prog-wrap { width:100%; }
+.side-panel .hint { margin:0;font-size:11.5px; }
+
+.page-title{text-align:center;margin:28px auto 20px;animation:fadeDown 0.6s ease both;max-width:700px;padding:16px 28px 0;background:radial-gradient(ellipse 70% 120% at 50% 60%,rgba(50,180,160,0.08),transparent 80%)}
+.page-title-eyebrow{font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.3em;color:#7ecfd4;text-transform:uppercase;margin-bottom:10px}
+.page-title h1{font-family:'Cinzel Decorative',serif;font-size:clamp(22px,4vw,36px);font-weight:700;color:#f2c86b;line-height:1.2;letter-spacing:0.02em;text-shadow:0 0 40px rgba(242,200,107,0.25),0 0 90px rgba(50,180,160,0.18),0 2px 4px rgba(0,0,0,0.8)}
+.page-title-rule{display:flex;align-items:center;gap:12px;margin-top:14px;color:rgba(126,207,212,0.5);font-size:16px}
+.page-title-rule::before,.page-title-rule::after{content:'';flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(126,207,212,0.3),transparent)}
 </style>
 </head>
 <body>
 
-<header>
+<div class="page-title">
+  <div class="page-title-eyebrow">Harpagia · Enchanting</div>
   <h1>Soulstone Enchanting Advisor</h1>
-  <div id="solver-status">
-    <span class="sdot dot-y" id="sdot"></span>
-    <span id="stext">Solving optimal policy…</span>
-    <span class="prog-wrap"><span id="prog-bar" class="prog-bar"></span></span>
-    <span id="prog-pct" style="font-size:11px;color:#3a6a64"></span>
-  </div>
-</header>
-
-<div class="tabs">
-  <button class="tab-btn active" data-tab="manual">Manual Entry</button>
-  <!-- <button class="tab-btn" data-tab="screen">Screen Capture</button> -->
+  <div class="page-title-rule">✦</div>
 </div>
 
 <!-- ═══ MANUAL TAB ═══ -->
 <div id="tab-manual" class="tab-content active">
+  <div class="tool-layout">
 
-  <div class="hint" style="margin-bottom:14px;">
-    This tool uses <strong>Dynamic Programming</strong> to solve the optimal enchanting policy across all possible game states, guaranteeing the best possible recommendation at every step. It targets a distribution of <strong>9 / 6 / 3</strong> successes across the three affixes — assigned dynamically, so whichever affix is best positioned becomes the 9-target, and so on. If the current state makes that distribution unreachable, the result will show <strong>9/6/3 Unachievable</strong>.
-  </div>
+    <div class="main-col">
+      <div class="chance-row">
+        <div class="chance-row-labels">
+          <label>Current Success Chance</label>
+          <span class="chance-hint">Oscillates 25–75% with each enchant result</span>
+        </div>
+        <button id="global-reset-btn" class="btn-reset" style="flex-shrink:0;padding:8px 16px;font-size:12.6px;white-space:nowrap;color:#e09090;border-color:rgba(200,80,80,0.25);">Reset Tool</button>
+        <span id="ci-display" class="ci-display">75%</span>
+      </div>
 
-  <div class="chance-row">
-    <div class="chance-row-labels">
-      <label>Current Success Chance</label>
-      <span class="chance-hint">Oscillates 25–75% with each enchant result</span>
+      <div id="stat-rows"></div>
+
+      <div class="result-box neutral" id="m-result">
+        <div class="result-action" id="m-action">Waiting for solver…</div>
+        <div class="result-prob" id="m-prob"></div>
+        <div class="winbar-wrap" id="m-wbar-wrap" style="display:none">
+          <div class="winbar" id="m-wbar"></div>
+        </div>
+      </div>
     </div>
-    <button id="global-reset-btn" class="btn-reset" style="flex-shrink:0;padding:8px 16px;font-size:12.6px;white-space:nowrap;color:#e09090;border-color:rgba(200,80,80,0.25);">Reset Tool</button>
-    <span id="ci-display" class="ci-display">75%</span>
-  </div>
 
-  <div id="stat-rows"></div>
-
-  <div class="result-box neutral" id="m-result">
-    <div class="result-action" id="m-action">Waiting for solver…</div>
-    <div class="result-prob" id="m-prob"></div>
-    <div class="winbar-wrap" id="m-wbar-wrap" style="display:none">
-      <div class="winbar" id="m-wbar"></div>
+    <div class="side-panel">
+      <div class="side-card">
+        <div class="side-card-label">Solver</div>
+        <div id="solver-status">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="sdot dot-y" id="sdot"></span>
+            <span id="stext">Solving optimal policy…</span>
+          </div>
+          <span class="prog-wrap"><span id="prog-bar" class="prog-bar"></span></span>
+          <span id="prog-pct" style="font-size:11px;color:#8a8078"></span>
+        </div>
+      </div>
+      <div class="side-card">
+        <div class="side-card-label">About</div>
+        <div class="hint">
+          This tool uses <strong>Dynamic Programming</strong> to solve the optimal enchanting policy across all possible game states, guaranteeing the best possible recommendation at every step. It targets a distribution of <strong>9 / 6 / 3</strong> successes across the three affixes — assigned dynamically, so whichever affix is best positioned becomes the 9-target, and so on. If the current state makes that distribution unreachable, the result will show <strong>9/6/3 Unachievable</strong>.
+        </div>
+      </div>
     </div>
-  </div>
 
+  </div>
 </div>
 
 <!-- ═══ SCREEN CAPTURE TAB ═══ -->
