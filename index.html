@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Soulstone Enchanting Advisor</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
@@ -229,6 +230,13 @@ header h1{
 .page-title h1{font-family:'Cinzel Decorative',serif;font-size:clamp(22px,4vw,36px);font-weight:700;color:#f2c86b;line-height:1.2;letter-spacing:0.02em;text-shadow:0 0 40px rgba(242,200,107,0.25),0 0 90px rgba(50,180,160,0.18),0 2px 4px rgba(0,0,0,0.8)}
 .page-title-rule{display:flex;align-items:center;gap:12px;margin-top:14px;color:rgba(126,207,212,0.5);font-size:16px}
 .page-title-rule::before,.page-title-rule::after{content:'';flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(126,207,212,0.3),transparent)}
+
+@media (max-width: 480px) {
+  .page-title { padding: 12px 12px 0; margin: 16px auto 14px; }
+  .tool-layout { flex-direction: column; padding: 16px 12px; gap: 16px; }
+  .side-panel  { width: 100%; position: static; flex-direction: row; flex-wrap: wrap; }
+  .side-card   { flex: 1; min-width: 0; }
+}
 </style>
 </head>
 <body>
