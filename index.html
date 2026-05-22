@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=0.65">
 <title>Soulstone Enchanting Advisor</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
@@ -233,9 +233,9 @@ header h1{
 .page-title-rule{display:flex;align-items:center;gap:12px;margin-top:14px;color:rgba(126,207,212,0.5);font-size:16px}
 .page-title-rule::before,.page-title-rule::after{content:'';flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(126,207,212,0.3),transparent)}
 
-@media (max-width: 480px) {
+@media (max-width: 680px) {
   .page-title { padding: 12px 12px 0; margin: 16px auto 14px; }
-  .tool-layout { flex-direction: column; padding: 16px 12px; gap: 16px; }
+  .tool-layout { flex-direction: column; padding: 16px 12px; gap: 16px; align-items: stretch; }
   .side-panel  { width: 100%; position: static; flex-direction: row; flex-wrap: wrap; }
   .side-card   { flex: 1; min-width: 0; }
   header { padding: 12px 14px; }
@@ -722,6 +722,7 @@ function buildDiamonds(container, isCurse, att, suc, history) {
   }
 }
 
+
 const statRowsEl = document.getElementById('stat-rows');
 STAT_NAMES.forEach((name, si) => {
   const card = document.createElement('div');
@@ -729,7 +730,6 @@ STAT_NAMES.forEach((name, si) => {
   card.innerHTML=`
     <div class="stat-head">
       <span class="stat-name-label ${STAT_CURSE[si]?'curse-color':'affix-color'}">${name}</span>
-      <span class="stat-goal-label">${STAT_GOALS[si]}</span>
     </div>
     <div class="stat-inputs">
       <div class="stat-counters">
@@ -1217,6 +1217,16 @@ async function analyzeFrame() {
 }
 
 document.getElementById('btn-snap').addEventListener('click',()=>{drawFrame();analyzeFrame()});
+
+(function () {
+    function updateEmbedZoom() {
+        if (window.self !== window.top) {
+            document.documentElement.style.zoom = screen.width <= 680 ? '0.65' : '';
+        }
+    }
+    updateEmbedZoom();
+    window.addEventListener('resize', updateEmbedZoom);
+})();
 </script>
 </body>
 </html>
